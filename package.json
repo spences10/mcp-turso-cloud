@@ -23,7 +23,10 @@
   },
   "keywords": [
     "mcp",
-    "model-context-protocol"
+    "model-context-protocol",
+    "turso",
+    "database",
+    "vector-search"
   ],
   "author": "Scott Spence",
   "license": "MIT",
@@ -33,6 +36,9 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.7.0"
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "@libsql/client": "^0.15.0",
+    "dotenv": "^16.4.7",
+    "zod": "^3.24.2"
   }
 }
