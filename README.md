@@ -2,10 +2,6 @@
 
 A Model Context Protocol (MCP) server that provides integration with Turso databases for LLMs. This server implements a two-level authentication system to handle both organization-level and database-level operations, making it easy to manage and query Turso databases directly from LLMs.
 
-<a href="https://glama.ai/mcp/servers/turso">
-  <img width="380" height="200" src="https://glama.ai/mcp/servers/turso/badge" alt="Glama badge" />
-</a>
-
 ## Features
 
 ### 🏢 Organization-Level Operations
