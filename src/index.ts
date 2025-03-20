@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import { get_config } from './config.js';
 import { handle_error } from './common/errors.js';
-import { register_organization_tools } from './tools/organization.js';
+import { register_tools } from './tools/handler.js';
 
 // Get package info for server metadata
 const __filename = fileURLToPath(import.meta.url);
@@ -37,8 +37,32 @@ class TursoServer {
         capabilities: {
           resources: {},
           tools: {
+            // Organization tools
             list_databases: {
               description: 'List all databases in your Turso organization'
+            },
+            create_database: {
+              description: 'Create a new database in your Turso organization'
+            },
+            delete_database: {
+              description: 'Delete a database from your Turso organization'
+            },
+            generate_database_token: {
+              description: 'Generate a new token for a specific database'
+            },
+            
+            // Database tools
+            list_tables: {
+              description: 'Lists all tables in a database'
+            },
+            execute_query: {
+              description: 'Executes a SQL query against a database'
+            },
+            describe_table: {
+              description: 'Gets schema information for a table'
+            },
+            vector_search: {
+              description: 'Performs vector similarity search'
             }
           },
         },
@@ -66,10 +90,10 @@ class TursoServer {
       const config = get_config();
       console.error(`Turso MCP server initialized for organization: ${config.TURSO_ORGANIZATION}`);
       
-      // Register organization tools
-      register_organization_tools(this.server);
+      // Register all tools using the unified handler
+      register_tools(this.server);
       
-      console.error('Organization tools registered');
+      console.error('All tools registered');
     } catch (error) {
       console.error('Failed to initialize server:', error);
       process.exit(1);

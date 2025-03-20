@@ -4,6 +4,7 @@
 import { createClient, Client, ResultSet } from '@libsql/client';
 import { get_database_token } from './token-manager.js';
 import { TursoApiError } from '../common/errors.js';
+import { get_config } from '../config.js';
 
 // Cache of database clients
 const client_cache: Record<string, Client> = {};
@@ -25,9 +26,13 @@ export async function get_database_client(
     // Get a token for the database
     const token = await get_database_token(database_name, permission);
     
-    // Create a new client
+    // Get the organization name from config
+    const config = get_config();
+    const organization = config.TURSO_ORGANIZATION;
+    
+    // Create a new client with the correct hostname format
     const client = createClient({
-      url: `https://${database_name}.turso.io`,
+      url: `https://${database_name}-${organization}.turso.io`,
       authToken: token,
     });
     

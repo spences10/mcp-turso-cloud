@@ -20,7 +20,7 @@ A Model Context Protocol (MCP) server that provides integration with Turso datab
 - **List Tables**: View all tables in a specific database
 - **Execute Query**: Run SQL queries against your databases
 - **Describe Table**: Get schema information for database tables
-- **Vector Search**: Perform vector similarity search (coming soon)
+- **Vector Search**: Perform vector similarity search using SQLite vector extensions
 
 ## Two-Level Authentication System
 
@@ -233,6 +233,30 @@ Example:
 {
   "table": "users",
   "database": "customer_db"
+}
+```
+
+#### vector_search
+
+Performs vector similarity search using SQLite vector extensions.
+
+Parameters:
+
+- `table` (string, required): Table name
+- `vector_column` (string, required): Column containing vectors
+- `query_vector` (number[], required): Query vector for similarity search
+- `limit` (number, optional): Maximum number of results (default: 10)
+- `database` (string, optional): Database name (uses context if not provided)
+
+Example:
+
+```json
+{
+  "table": "embeddings",
+  "vector_column": "embedding",
+  "query_vector": [0.1, 0.2, 0.3, 0.4],
+  "limit": 5,
+  "database": "vector_db"
 }
 ```
 
