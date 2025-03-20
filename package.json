@@ -1,12 +1,12 @@
 {
-  "name": "mcp-turso",
+  "name": "mcp-turso-cloud",
   "version": "0.0.0",
   "description": "MCP server for integrating Turso with LLMs",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "mcp-turso": "./dist/index.js"
+    "mcp-turso-cloud": "./dist/index.js"
   },
   "files": [
     "dist",

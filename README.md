@@ -1,4 +1,4 @@
-# mcp-turso
+# mcp-turso-cloud
 
 A Model Context Protocol (MCP) server that provides integration with Turso databases for LLMs. This server implements a two-level authentication system to handle both organization-level and database-level operations, making it easy to manage and query Turso databases directly from LLMs.
 
@@ -47,9 +47,9 @@ Add this to your Cline MCP settings:
 ```json
 {
   "mcpServers": {
-    "mcp-turso": {
+    "mcp-turso-cloud": {
       "command": "node",
-      "args": ["/path/to/mcp-turso/dist/index.js"],
+      "args": ["/path/to/mcp-turso-cloud/dist/index.js"],
       "env": {
         "TURSO_API_TOKEN": "your-turso-api-token",
         "TURSO_ORGANIZATION": "your-organization-name",
@@ -69,12 +69,12 @@ For WSL environments, add this to your Claude Desktop configuration:
 ```json
 {
   "mcpServers": {
-    "mcp-turso": {
+    "mcp-turso-cloud": {
       "command": "wsl.exe",
       "args": [
         "bash",
         "-c",
-        "TURSO_API_TOKEN=your-token TURSO_ORGANIZATION=your-org node /path/to/mcp-turso/dist/index.js"
+        "TURSO_API_TOKEN=your-token TURSO_ORGANIZATION=your-org node /path/to/mcp-turso-cloud/dist/index.js"
       ]
     }
   }

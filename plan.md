@@ -248,11 +248,6 @@ const ConfigSchema = z.object({
    * Add support for implicit database selection
    * Improve error handling and user feedback
 
-5. **Phase 5: Optimization**
-   * Implement connection pooling
-   * Add token caching and rotation
-   * Optimize performance for frequent database switching
-
 ## Folder Structure
 
 ```
