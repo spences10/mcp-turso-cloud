@@ -22,6 +22,64 @@ export function registerOrganizationTools(server: Server): void {
           required: [],
         },
       },
+      {
+        name: 'create_database',
+        description: 'Create a new database in your Turso organization',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Name of the database to create',
+            },
+            group: {
+              type: 'string',
+              description: 'Optional group name for the database',
+            },
+            regions: {
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              description: 'Optional list of regions to deploy the database to',
+            },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'delete_database',
+        description: 'Delete a database from your Turso organization',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Name of the database to delete',
+            },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'generate_database_token',
+        description: 'Generate a new token for a specific database',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            database: {
+              type: 'string',
+              description: 'Name of the database to generate a token for',
+            },
+            permission: {
+              type: 'string',
+              enum: ['full-access', 'read-only'],
+              description: 'Permission level for the token',
+            },
+          },
+          required: ['database'],
+        },
+      },
     ],
   }));
 
@@ -37,6 +95,73 @@ export function registerOrganizationTools(server: Server): void {
             {
               type: 'text',
               text: JSON.stringify({ databases }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      // Handle create_database tool
+      if (request.params.name === 'create_database') {
+        const { name, group, regions } = request.params.arguments as {
+          name: string;
+          group?: string;
+          regions?: string[];
+        };
+        
+        const database = await organizationClient.createDatabase(name, {
+          group,
+          regions,
+        });
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ database }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      // Handle delete_database tool
+      if (request.params.name === 'delete_database') {
+        const { name } = request.params.arguments as { name: string };
+        
+        await organizationClient.deleteDatabase(name);
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ success: true, message: `Database '${name}' deleted successfully` }, null, 2),
+            },
+          ],
+        };
+      }
+      
+      // Handle generate_database_token tool
+      if (request.params.name === 'generate_database_token') {
+        const { database, permission = 'full-access' } = request.params.arguments as {
+          database: string;
+          permission?: 'full-access' | 'read-only';
+        };
+        
+        const jwt = await organizationClient.generateDatabaseToken(database, permission);
+        
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({ 
+                success: true, 
+                database,
+                token: {
+                  jwt,
+                  permission,
+                  database
+                },
+                message: `Token generated successfully for database '${database}' with '${permission}' permissions` 
+              }, null, 2),
             },
           ],
         };

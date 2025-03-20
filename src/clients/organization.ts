@@ -41,8 +41,10 @@ export async function listDatabases(): Promise<Database[]> {
     });
     
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || response.statusText;
       throw new TursoApiError(
-        `Failed to list databases: ${response.statusText}`,
+        `Failed to list databases: ${errorMessage}`,
         response.status
       );
     }
@@ -73,6 +75,9 @@ export async function createDatabase(
   const organizationId = getOrganizationId();
   const url = `${API_BASE_URL}/organizations/${organizationId}/databases`;
   
+  // Default to "default" group if not specified
+  const group = options.group || "default";
+  
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -82,14 +87,16 @@ export async function createDatabase(
       },
       body: JSON.stringify({
         name,
-        group: options.group,
+        group,
         regions: options.regions,
       }),
     });
     
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || response.statusText;
       throw new TursoApiError(
-        `Failed to create database ${name}: ${response.statusText}`,
+        `Failed to create database ${name}: ${errorMessage}`,
         response.status
       );
     }
@@ -120,8 +127,10 @@ export async function deleteDatabase(name: string): Promise<void> {
     });
     
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || response.statusText;
       throw new TursoApiError(
-        `Failed to delete database ${name}: ${response.statusText}`,
+        `Failed to delete database ${name}: ${errorMessage}`,
         response.status
       );
     }
@@ -153,8 +162,10 @@ export async function getDatabaseDetails(name: string): Promise<Database> {
     });
     
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error || response.statusText;
       throw new TursoApiError(
-        `Failed to get database details for ${name}: ${response.statusText}`,
+        `Failed to get database details for ${name}: ${errorMessage}`,
         response.status
       );
     }
@@ -169,4 +180,18 @@ export async function getDatabaseDetails(name: string): Promise<Database> {
       500
     );
   }
+}
+
+/**
+ * Generate a new token for a database
+ * This is a wrapper around the token-manager's generateDatabaseToken function
+ * to make it available through the organization client
+ */
+export async function generateDatabaseToken(
+  databaseName: string,
+  permission: 'full-access' | 'read-only' = 'full-access'
+): Promise<string> {
+  // Import here to avoid circular dependencies
+  const { generateDatabaseToken: generateToken } = await import('./token-manager.js');
+  return generateToken(databaseName, permission);
 }
