@@ -1,114 +1,249 @@
-# Turso MCP Server Plan
+# Turso MCP Server with Account-Level Operations
 
 ## Architecture Overview
 
 ```mermaid
 graph TD
-    A[Turso MCP Server] --> B[Tool Registry]
-    A --> C[Resource Registry]
+    A[Enhanced Turso MCP Server] --> B[Client Layer]
+    B --> C[Organization Client]
+    B --> D[Database Client]
     
-    B --> D[Query Tools]
-    B --> E[Schema Tools]
-    B --> F[Vector Tools]
+    A --> E[Tool Registry]
+    E --> F[Organization Tools]
+    E --> G[Database Tools]
     
-    C --> G[Schema Resources]
-    C --> H[Query Result Resources]
+    F --> F1[list_databases]
+    F --> F2[create_database]
+    F --> F3[delete_database]
+    F --> F4[generate_database_token]
     
-    D --> D1[execute_query]
-    E --> E1[list_tables]
-    E --> E2[describe_table]
-    E --> E3[list_relationships]
-    F --> F1[vector_search]
-    F --> F2[hybrid_search]
+    G --> G1[list_tables]
+    G --> G2[execute_query]
+    G --> G3[describe_table]
+    G --> G4[vector_search]
     
-    G --> G1[tables_list]
-    G --> G2[table_details]
-    G --> G3[relationships]
-    H --> H1[query_results]
+    C --> H[Turso Platform API]
+    D --> I[Database HTTP API]
     
-    A --> I[Turso Client]
-    I --> J[libSQL Client]
-    J --> K[Turso Database]
-    
-    L[Configuration] --> A
+    H --> J[Organization Account]
+    J --> K[Multiple Databases]
+    I --> K
 ```
 
-## Key Components
+## Two-Level Authentication System
 
-1. **Unified MCP Server Interface**
-   * Single MCP server exposing Turso database capabilities
-   * Standardized parameter structure for all tools
-   * Support for Turso-specific features
+The Turso MCP server will implement a two-level authentication system to handle both organization-level and database-level operations:
 
-2. **Tool Registry**
-   * Registers all database tools with clear, detailed descriptions
-   * Highlights capabilities and use cases for each tool
-   * Provides comprehensive input schemas
+1. **Organization-Level Authentication**
+   * Requires a Turso Platform API token
+   * Used for listing, creating, and managing databases
+   * Obtained through the Turso dashboard or CLI
+   * Stored as `TURSO_API_TOKEN` in the configuration
 
-3. **Resource Registry**
-   * Exposes database schema information as resources
-   * Provides query results as formatted resources
-   * Implements resource templates for dynamic access
+2. **Database-Level Authentication**
+   * Requires database-specific tokens
+   * Used for executing queries and accessing database schema
+   * Can be generated using the organization token
+   * Stored in a token cache for reuse
 
-4. **Turso Client Integration**
-   * Wraps the official @libsql/client library
-   * Handles connection management and pooling
-   * Implements error handling and retry logic
+## User Interaction Flow
 
-5. **Configuration Management**
-   * Environment variable-based authentication
-   * Configurable defaults for connection parameters
-   * Support for multiple database connections
+When a user interacts with the MCP server through an LLM, the flow will be:
 
-## Tool Descriptions Strategy
+1. **Organization-Level Requests**
+   * Example: "List databases available"
+   * Uses the organization token to call the Platform API
+   * Returns a list of available databases
 
-Each tool will have a detailed description explaining:
-* What the tool does
-* When to use it
-* Parameter requirements
-* Expected output format
-* Limitations or constraints
+2. **Database-Level Requests**
+   * Example: "Show all rows in table users in database customer_db"
+   * Process:
+     1. Check if a token exists for the specified database
+     2. If not, use the organization token to generate a new database token
+     3. Use the database token to connect to the database
+     4. Execute the query and return results
 
-### Example Tool Descriptions:
+3. **Context Management**
+   * The server will maintain the current database context
+   * If no database is specified, it uses the last selected database
+   * Example: "Show all tables" (uses current database context)
 
-**Query Tools:**
-* **execute_query**: "Execute SQL queries against a Turso database. Supports parameterized queries for security and complex query structures. Returns formatted results with pagination for large datasets. Best for data retrieval, updates, and schema modifications."
+## Token Management Strategy
 
-**Schema Tools:**
-* **list_tables**: "List all tables in the connected Turso database. Returns table names, row counts, and creation information. Use for database exploration and schema understanding."
-* **describe_table**: "Get detailed information about a specific table including columns, types, constraints, and indexes. Provides comprehensive schema details for a single table."
-* **list_relationships**: "Discover foreign key relationships between tables in the database. Maps connections between tables for understanding data structure and dependencies."
+The server will implement a sophisticated token management system:
 
-**Vector Tools:**
-* **vector_search**: "Perform semantic similarity search using Turso's vector capabilities. Leverages the DiskANN algorithm for approximate nearest neighbor search. Ideal for finding similar items, semantic matching, and AI-powered search."
-* **hybrid_search**: "Combine traditional SQL filtering with vector similarity search. Allows filtering results by regular columns before applying vector similarity, enabling powerful combined queries."
+```mermaid
+graph TD
+    A[Token Request] --> B{Token in Cache?}
+    B -->|Yes| C[Return Cached Token]
+    B -->|No| D[Generate New Token]
+    D --> E[Store in Cache]
+    E --> F[Return New Token]
+    
+    G[Periodic Cleanup] --> H[Remove Expired Tokens]
+```
 
-## Implementation Plan
+1. **Token Cache**
+   * In-memory cache of database tokens
+   * Indexed by database name
+   * Includes expiration information
 
-1. **Phase 1: Core Structure**
-   * Set up the MCP server framework
-   * Implement Turso client integration
-   * Create configuration management
+2. **Token Generation**
+   * Uses organization token to generate database tokens
+   * Sets appropriate permissions (read-only vs. full-access)
+   * Sets reasonable expiration times (configurable)
 
-2. **Phase 2: Basic Database Tools**
-   * Implement schema exploration tools
-   * Create query execution functionality
-   * Add resource handlers for schema and results
+3. **Token Rotation**
+   * Handles token expiration gracefully
+   * Regenerates tokens when needed
+   * Implements retry logic for failed requests
 
-3. **Phase 3: Vector Search Capabilities**
-   * Implement vector column detection
-   * Add vector search tools
-   * Create hybrid search functionality
+## Configuration Requirements
 
-4. **Phase 4: Advanced Features**
-   * Add multi-tenant database support
-   * Implement edge computing features
-   * Create performance optimizations
+```typescript
+const ConfigSchema = z.object({
+  // Organization-level authentication
+  TURSO_API_TOKEN: z.string().min(1),
+  TURSO_ORGANIZATION: z.string().min(1),
+  
+  // Optional default database
+  TURSO_DEFAULT_DATABASE: z.string().optional(),
+  
+  // Token management settings
+  TOKEN_EXPIRATION: z.string().default('7d'),
+  TOKEN_PERMISSION: z.enum(['full-access', 'read-only']).default('full-access'),
+  
+  // Server settings
+  PORT: z.string().default('3000'),
+});
+```
 
-5. **Phase 5: Testing & Documentation**
-   * Comprehensive testing across features
-   * Create detailed documentation
-   * Implement example use cases
+## Implementation Challenges
+
+1. **Connection Management**
+   * Challenge: Creating and managing connections to multiple databases
+   * Solution: Implement a connection pool with LRU eviction strategy
+
+2. **Context Switching**
+   * Challenge: Determining which database to use for operations
+   * Solution: Maintain session context and support explicit database selection
+
+3. **Error Handling**
+   * Challenge: Different error formats from Platform API vs. Database API
+   * Solution: Implement unified error handling with clear error messages
+
+4. **Performance Optimization**
+   * Challenge: Overhead of switching between databases
+   * Solution: Connection pooling and token caching
+
+## Tool Implementations
+
+### Organization Tools
+
+1. **list_databases**
+   * Lists all databases in the organization
+   * Parameters: None (uses organization from config)
+   * Returns: Array of database objects with names, regions, etc.
+
+2. **create_database**
+   * Creates a new database in the organization
+   * Parameters: name, group (optional), regions (optional)
+   * Returns: Database details
+
+3. **delete_database**
+   * Deletes a database from the organization
+   * Parameters: name
+   * Returns: Success confirmation
+
+4. **generate_database_token**
+   * Generates a new token for a specific database
+   * Parameters: database name, expiration (optional), permission (optional)
+   * Returns: Token information
+
+### Database Tools
+
+1. **list_tables**
+   * Lists all tables in a database
+   * Parameters: database (optional, uses context if not provided)
+   * Returns: Array of table names
+
+2. **execute_query**
+   * Executes a SQL query against a database
+   * Parameters: query, params (optional), database (optional)
+   * Returns: Query results with pagination
+
+3. **describe_table**
+   * Gets schema information for a table
+   * Parameters: table name, database (optional)
+   * Returns: Column definitions and constraints
+
+4. **vector_search**
+   * Performs vector similarity search
+   * Parameters: table, vector column, query vector, database (optional)
+   * Returns: Search results
+
+## LLM Interaction Examples
+
+1. **Organization-Level Operations**
+
+   User: "List all databases in my Turso account"
+   
+   LLM uses: `list_databases` tool
+   
+   Response: "You have 3 databases in your account: customer_db, product_db, and analytics_db."
+
+2. **Database Selection**
+
+   User: "Show tables in customer_db"
+   
+   LLM uses: `list_tables` tool with database="customer_db"
+   
+   Response: "The customer_db database contains the following tables: users, orders, products."
+
+3. **Query Execution**
+
+   User: "Show all users in the users table"
+   
+   LLM uses: `execute_query` tool with query="SELECT * FROM users"
+   
+   Response: "Here are the users in the database: [table of results]"
+
+4. **Context-Aware Operations**
+
+   User: "What columns does the orders table have?"
+   
+   LLM uses: `describe_table` tool with table="orders"
+   
+   Response: "The orders table has the following columns: id (INTEGER), user_id (INTEGER), product_id (INTEGER), quantity (INTEGER), order_date (TEXT)."
+
+## Implementation Phases
+
+1. **Phase 1: Core Infrastructure**
+   * Set up the two-level authentication system
+   * Implement token management
+   * Create basic organization and database clients
+
+2. **Phase 2: Organization Tools**
+   * Implement list_databases
+   * Implement create_database
+   * Implement delete_database
+   * Implement generate_database_token
+
+3. **Phase 3: Database Tools**
+   * Implement list_tables
+   * Implement execute_query
+   * Implement describe_table
+   * Implement vector_search
+
+4. **Phase 4: Context Management**
+   * Implement database context tracking
+   * Add support for implicit database selection
+   * Improve error handling and user feedback
+
+5. **Phase 5: Optimization**
+   * Implement connection pooling
+   * Add token caching and rotation
+   * Optimize performance for frequent database switching
 
 ## Folder Structure
 
@@ -116,175 +251,14 @@ Each tool will have a detailed description explaining:
 src/
 ├── index.ts                 # Main server entry point
 ├── config.ts                # Configuration management
-├── db/
-│   ├── client.ts            # Turso client wrapper
-│   ├── connection.ts        # Connection management
-│   └── utils.ts             # Database utility functions
+├── clients/
+│   ├── organization.ts      # Turso Platform API client
+│   ├── database.ts          # Database HTTP API client
+│   └── token-manager.ts     # Token generation and caching
 ├── tools/
-│   ├── query.ts             # Query execution tools
-│   ├── schema.ts            # Schema exploration tools
-│   └── vector.ts            # Vector search tools
-├── resources/
-│   ├── schema.ts            # Schema-related resources
-│   └── query.ts             # Query result resources
+│   ├── organization.ts      # Organization-level tools
+│   ├── database.ts          # Database-level tools
+│   └── context.ts           # Context management
 └── common/
     ├── types.ts             # Common type definitions
-    └── utils.ts             # Shared utility functions
-```
-
-## Consumer Tool Selection
-
-The LLM will have clear guidance for tool selection through detailed descriptions:
-
-```typescript
-// Example tool registration with detailed description
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    {
-      name: 'execute_query',
-      description: 'Execute SQL queries against a Turso database. Supports parameterized queries for security and complex query structures. Returns formatted results with pagination for large datasets. Best for data retrieval, updates, and schema modifications.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: 'SQL query to execute'
-          },
-          params: {
-            type: 'object',
-            description: 'Query parameters (optional)'
-          },
-          page_size: {
-            type: 'number',
-            description: 'Number of results per page (optional)'
-          },
-          page: {
-            type: 'number',
-            description: 'Page number to retrieve (optional)'
-          }
-        },
-        required: ['query']
-      }
-    },
-    {
-      name: 'vector_search',
-      description: 'Perform semantic similarity search using Turso\'s vector capabilities. Leverages the DiskANN algorithm for approximate nearest neighbor search. Ideal for finding similar items, semantic matching, and AI-powered search.',
-      inputSchema: {
-        type: 'object',
-        properties: {
-          table: {
-            type: 'string',
-            description: 'Table containing vector data'
-          },
-          vector_column: {
-            type: 'string',
-            description: 'Column containing vector embeddings'
-          },
-          query_vector: {
-            type: 'string',
-            description: 'Vector to search for, formatted as JSON array'
-          },
-          limit: {
-            type: 'number',
-            description: 'Maximum number of results to return'
-          },
-          additional_columns: {
-            type: 'array',
-            items: {
-              type: 'string'
-            },
-            description: 'Additional columns to include in results'
-          }
-        },
-        required: ['table', 'vector_column', 'query_vector']
-      }
-    }
-  ]
-}));
-```
-
-## Best Practices
-
-1. **Non-Interactive Environment**
-   * Design for operation in a non-interactive environment where user prompts are not possible
-   * All configuration must be provided upfront via environment variables
-   * Avoid any flows that require browser interaction or user confirmation during runtime
-   * Create separate setup scripts for any one-time authentication flows (if needed)
-
-2. **Authentication & Credentials**
-   * Use environment variables for all sensitive credentials (Turso database URL, auth tokens)
-   * Never hardcode credentials in the codebase
-   * Provide clear documentation on required environment variables
-   * Include validation to ensure all required credentials are provided before startup
-
-3. **Error Handling**
-   * Implement consistent error handling across all database operations
-   * Map Turso/libSQL errors to appropriate MCP error codes
-   * Provide clear error messages with troubleshooting guidance
-   * Include fallback mechanisms where appropriate
-
-4. **Security**
-   * Use parameterized queries to prevent SQL injection
-   * Implement input validation for all parameters
-   * Secure handling of database credentials
-   * Consider rate limiting for resource-intensive operations
-
-5. **Performance**
-   * Connection pooling to minimize overhead
-   * Pagination for large result sets
-   * Caching for frequently accessed schema information
-   * Implement timeout handling for long-running queries
-
-6. **Code Organization**
-   * Modular design with clear separation of concerns
-   * Consistent naming conventions using snake_case
-   * Comprehensive type definitions
-   * Keep provider implementations isolated
-
-7. **Documentation**
-   * Detailed JSDoc comments for all functions
-   * Usage examples for each tool
-   * Clear explanation of vector search capabilities
-   * Setup instructions including environment variable configuration
-
-## Implementation Status & Next Steps
-
-### Phase 1: Core Structure (Not Started)
-* ⬜ Set up the MCP server framework
-* ⬜ Implement Turso client integration
-* ⬜ Create configuration management
-* ⬜ Set up basic error handling
-
-### Phase 2: Basic Database Tools (Not Started)
-* ⬜ Implement schema exploration tools
-* ⬜ Create query execution functionality
-* ⬜ Add resource handlers for schema and results
-* ⬜ Implement pagination for large result sets
-
-### Phase 3: Vector Search Capabilities (Not Started)
-* ⬜ Implement vector column detection
-* ⬜ Add vector search tools
-* ⬜ Create hybrid search functionality
-* ⬜ Test with sample vector data
-
-### Phase 4: Advanced Features (Not Started)
-* ⬜ Add multi-tenant database support
-* ⬜ Implement edge computing features
-* ⬜ Create performance optimizations
-* ⬜ Add comprehensive logging
-
-### Phase 5: Testing & Documentation (Not Started)
-* ⬜ Create unit tests for all components
-* ⬜ Implement integration tests
-* ⬜ Create detailed documentation
-* ⬜ Develop example use cases
-
-## Development Order
-
-1. Start with basic database connection and configuration
-2. Implement schema exploration tools (list_tables, describe_table)
-3. Add query execution functionality
-4. Implement resource handlers for schema and query results
-5. Add vector search capabilities
-6. Implement advanced features and optimizations
-7. Create comprehensive tests and documentation
+    └── errors.ts            # Error handling utilities
