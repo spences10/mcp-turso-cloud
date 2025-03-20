@@ -1,32 +1,32 @@
 /**
  * Common type definitions for the Turso MCP server
  */
-import { ResultSet, IntMode } from '@libsql/client';
+import { IntMode, ResultSet } from '@libsql/client';
 
 // Organization-level types
 export interface Database {
-  name: string;
-  id: string;
-  region: string;
-  group?: string;
-  created_at: string;
+	name: string;
+	id: string;
+	region: string;
+	group?: string;
+	created_at: string;
 }
 
 // Token management types
 export interface CachedToken {
-  jwt: string;
-  expiresAt: Date;
-  permission: 'full-access' | 'read-only';
+	jwt: string;
+	expiresAt: Date;
+	permission: 'full-access' | 'read-only';
 }
 
 export interface TokenCache {
-  [databaseName: string]: CachedToken;
+	[databaseName: string]: CachedToken;
 }
 
 // Context management
 export interface DatabaseContext {
-  currentDatabase?: string;
+	currentDatabase?: string;
 }
 
 // Re-export types from @libsql/client for consistency
-export { ResultSet, IntMode };
+export { IntMode, ResultSet };
