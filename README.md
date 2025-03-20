@@ -1,6 +1,10 @@
 # mcp-turso-cloud
 
-A Model Context Protocol (MCP) server that provides integration with Turso databases for LLMs. This server implements a two-level authentication system to handle both organization-level and database-level operations, making it easy to manage and query Turso databases directly from LLMs.
+A Model Context Protocol (MCP) server that provides integration with
+Turso databases for LLMs. This server implements a two-level
+authentication system to handle both organization-level and
+database-level operations, making it easy to manage and query Turso
+databases directly from LLMs.
 
 <a href="https://glama.ai/mcp/servers/hnkzlqoh92">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/hnkzlqoh92/badge" alt="mcp-turso-cloud MCP server" />
@@ -13,52 +17,54 @@ A Model Context Protocol (MCP) server that provides integration with Turso datab
 - **List Databases**: View all databases in your Turso organization
 - **Create Database**: Create new databases with customizable options
 - **Delete Database**: Remove databases from your organization
-- **Generate Database Token**: Create authentication tokens for specific databases
+- **Generate Database Token**: Create authentication tokens for
+  specific databases
 
 ### 💾 Database-Level Operations
 
 - **List Tables**: View all tables in a specific database
 - **Execute Query**: Run SQL queries against your databases
 - **Describe Table**: Get schema information for database tables
-- **Vector Search**: Perform vector similarity search using SQLite vector extensions
+- **Vector Search**: Perform vector similarity search using SQLite
+  vector extensions
 
 ## Two-Level Authentication System
 
 The server implements a sophisticated authentication system:
 
 1. **Organization-Level Authentication**
-   * Uses a Turso Platform API token
-   * Manages databases and organization-level operations
-   * Obtained through the Turso dashboard
+
+   - Uses a Turso Platform API token
+   - Manages databases and organization-level operations
+   - Obtained through the Turso dashboard
 
 2. **Database-Level Authentication**
-   * Uses database-specific tokens
-   * Generated automatically using the organization token
-   * Cached for performance and rotated as needed
+   - Uses database-specific tokens
+   - Generated automatically using the organization token
+   - Cached for performance and rotated as needed
 
 ## Configuration
 
-This server requires configuration through your MCP client. Here are examples for different environments:
+This server requires configuration through your MCP client. Here are
+examples for different environments:
 
-### Cline Configuration
+### Cline/Claude Desktop Configuration
 
-Add this to your Cline MCP settings:
+Add this to your Cline/Claude Desktop MCP settings:
 
 ```json
 {
-  "mcpServers": {
-    "mcp-turso-cloud": {
-      "command": "node",
-      "args": ["/path/to/mcp-turso-cloud/dist/index.js"],
-      "env": {
-        "TURSO_API_TOKEN": "your-turso-api-token",
-        "TURSO_ORGANIZATION": "your-organization-name",
-        "TURSO_DEFAULT_DATABASE": "optional-default-database"
-      },
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
+	"mcpServers": {
+		"mcp-turso-cloud": {
+			"command": "npx",
+			"args": ["-y", "mcp-turso-cloud"],
+			"env": {
+				"TURSO_API_TOKEN": "your-turso-api-token",
+				"TURSO_ORGANIZATION": "your-organization-name",
+				"TURSO_DEFAULT_DATABASE": "optional-default-database"
+			}
+		}
+	}
 }
 ```
 
@@ -68,16 +74,16 @@ For WSL environments, add this to your Claude Desktop configuration:
 
 ```json
 {
-  "mcpServers": {
-    "mcp-turso-cloud": {
-      "command": "wsl.exe",
-      "args": [
-        "bash",
-        "-c",
-        "TURSO_API_TOKEN=your-token TURSO_ORGANIZATION=your-org node /path/to/mcp-turso-cloud/dist/index.js"
-      ]
-    }
-  }
+	"mcpServers": {
+		"mcp-turso-cloud": {
+			"command": "wsl.exe",
+			"args": [
+				"bash",
+				"-c",
+				"TURSO_API_TOKEN=your-token TURSO_ORGANIZATION=your-org node /path/to/mcp-turso-cloud/dist/index.js"
+			]
+		}
+	}
 }
 ```
 
@@ -87,9 +93,12 @@ The server requires the following environment variables:
 
 - `TURSO_API_TOKEN`: Your Turso Platform API token (required)
 - `TURSO_ORGANIZATION`: Your Turso organization name (required)
-- `TURSO_DEFAULT_DATABASE`: Default database to use when none is specified (optional)
-- `TOKEN_EXPIRATION`: Expiration time for generated database tokens (optional, default: '7d')
-- `TOKEN_PERMISSION`: Permission level for generated tokens (optional, default: 'full-access')
+- `TURSO_DEFAULT_DATABASE`: Default database to use when none is
+  specified (optional)
+- `TOKEN_EXPIRATION`: Expiration time for generated database tokens
+  (optional, default: '7d')
+- `TOKEN_PERMISSION`: Permission level for generated tokens (optional,
+  default: 'full-access')
 
 ## API
 
@@ -107,20 +116,20 @@ Example response:
 
 ```json
 {
-  "databases": [
-    {
-      "name": "customer_db",
-      "id": "abc123",
-      "region": "us-east",
-      "created_at": "2023-01-15T12:00:00Z"
-    },
-    {
-      "name": "product_db",
-      "id": "def456",
-      "region": "eu-west",
-      "created_at": "2023-02-20T15:30:00Z"
-    }
-  ]
+	"databases": [
+		{
+			"name": "customer_db",
+			"id": "abc123",
+			"region": "us-east",
+			"created_at": "2023-01-15T12:00:00Z"
+		},
+		{
+			"name": "product_db",
+			"id": "def456",
+			"region": "eu-west",
+			"created_at": "2023-02-20T15:30:00Z"
+		}
+	]
 }
 ```
 
@@ -138,9 +147,9 @@ Example:
 
 ```json
 {
-  "name": "analytics_db",
-  "group": "production",
-  "regions": ["us-east", "eu-west"]
+	"name": "analytics_db",
+	"group": "production",
+	"regions": ["us-east", "eu-west"]
 }
 ```
 
@@ -156,7 +165,7 @@ Example:
 
 ```json
 {
-  "name": "test_db"
+	"name": "test_db"
 }
 ```
 
@@ -168,15 +177,16 @@ Parameters:
 
 - `database` (string, required): Database name
 - `expiration` (string, optional): Token expiration time
-- `permission` (string, optional): Permission level ('full-access' or 'read-only')
+- `permission` (string, optional): Permission level ('full-access' or
+  'read-only')
 
 Example:
 
 ```json
 {
-  "database": "customer_db",
-  "expiration": "30d",
-  "permission": "read-only"
+	"database": "customer_db",
+	"expiration": "30d",
+	"permission": "read-only"
 }
 ```
 
@@ -188,13 +198,14 @@ Lists all tables in a database.
 
 Parameters:
 
-- `database` (string, optional): Database name (uses context if not provided)
+- `database` (string, optional): Database name (uses context if not
+  provided)
 
 Example:
 
 ```json
 {
-  "database": "customer_db"
+	"database": "customer_db"
 }
 ```
 
@@ -206,15 +217,16 @@ Parameters:
 
 - `query` (string, required): SQL query to execute
 - `params` (object, optional): Query parameters
-- `database` (string, optional): Database name (uses context if not provided)
+- `database` (string, optional): Database name (uses context if not
+  provided)
 
 Example:
 
 ```json
 {
-  "query": "SELECT * FROM users WHERE age > ?",
-  "params": { "1": 21 },
-  "database": "customer_db"
+	"query": "SELECT * FROM users WHERE age > ?",
+	"params": { "1": 21 },
+	"database": "customer_db"
 }
 ```
 
@@ -225,14 +237,15 @@ Gets schema information for a table.
 Parameters:
 
 - `table` (string, required): Table name
-- `database` (string, optional): Database name (uses context if not provided)
+- `database` (string, optional): Database name (uses context if not
+  provided)
 
 Example:
 
 ```json
 {
-  "table": "users",
-  "database": "customer_db"
+	"table": "users",
+	"database": "customer_db"
 }
 ```
 
@@ -244,19 +257,21 @@ Parameters:
 
 - `table` (string, required): Table name
 - `vector_column` (string, required): Column containing vectors
-- `query_vector` (number[], required): Query vector for similarity search
+- `query_vector` (number[], required): Query vector for similarity
+  search
 - `limit` (number, optional): Maximum number of results (default: 10)
-- `database` (string, optional): Database name (uses context if not provided)
+- `database` (string, optional): Database name (uses context if not
+  provided)
 
 Example:
 
 ```json
 {
-  "table": "embeddings",
-  "vector_column": "embedding",
-  "query_vector": [0.1, 0.2, 0.3, 0.4],
-  "limit": 5,
-  "database": "vector_db"
+	"table": "embeddings",
+	"vector_column": "embedding",
+	"query_vector": [0.1, 0.2, 0.3, 0.4],
+	"limit": 5,
+	"database": "vector_db"
 }
 ```
 
@@ -304,7 +319,8 @@ npm publish
 
 If you encounter authentication errors:
 
-1. Verify your Turso API token is valid and has the necessary permissions
+1. Verify your Turso API token is valid and has the necessary
+   permissions
 2. Check that your organization name is correct
 3. Ensure your token hasn't expired
 
