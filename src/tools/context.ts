@@ -2,7 +2,7 @@
  * Context management for the Turso MCP server
  */
 import { DatabaseContext } from '../common/types.js';
-import { getConfig } from '../config.js';
+import { get_config } from '../config.js';
 
 // Global context object
 const context: DatabaseContext = {
@@ -12,16 +12,16 @@ const context: DatabaseContext = {
 /**
  * Set the current database context
  */
-export function setCurrentDatabase(databaseName: string | undefined): void {
-  context.currentDatabase = databaseName;
+export function set_current_database(database_name: string | undefined): void {
+  context.currentDatabase = database_name;
 }
 
 /**
  * Get the current database context
  * If no database is set, use the default from config
  */
-export function getCurrentDatabase(): string | undefined {
-  return context.currentDatabase || getConfig().TURSO_DEFAULT_DATABASE;
+export function get_current_database(): string | undefined {
+  return context.currentDatabase || get_config().TURSO_DEFAULT_DATABASE;
 }
 
 /**
@@ -30,14 +30,14 @@ export function getCurrentDatabase(): string | undefined {
  * Otherwise, use the current database from context
  * Throws an error if no database is available
  */
-export function resolveDatabaseName(providedName?: string): string {
-  const databaseName = providedName || getCurrentDatabase();
+export function resolve_database_name(provided_name?: string): string {
+  const database_name = provided_name || get_current_database();
   
-  if (!databaseName) {
+  if (!database_name) {
     throw new Error(
       'No database specified. Please provide a database name or set a default database.'
     );
   }
   
-  return databaseName;
+  return database_name;
 }

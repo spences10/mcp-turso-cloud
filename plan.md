@@ -231,6 +231,7 @@ const ConfigSchema = z.object({
    * Implement delete_database
    * Implement generate_database_token
    * Enhanced error handling with detailed API error messages
+   * Converted codebase to use snake_case naming conventions
    * Successfully tested all organization tools
 
 3. **Phase 3: Database Tools** (Next Phase)

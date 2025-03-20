@@ -25,7 +25,7 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 // Parse environment variables using the schema
-export function loadConfig(): Config {
+export function load_config(): Config {
   try {
     return ConfigSchema.parse({
       TURSO_API_TOKEN: process.env.TURSO_API_TOKEN,
@@ -53,9 +53,9 @@ export function loadConfig(): Config {
 let config: Config | null = null;
 
 // Get the configuration, loading it if necessary
-export function getConfig(): Config {
+export function get_config(): Config {
   if (!config) {
-    config = loadConfig();
+    config = load_config();
   }
   return config;
 }

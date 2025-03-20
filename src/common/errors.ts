@@ -7,30 +7,30 @@ import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
  * Custom error class for Turso API errors
  */
 export class TursoApiError extends Error {
-  statusCode: number;
+  status_code: number;
   
-  constructor(message: string, statusCode: number) {
+  constructor(message: string, status_code: number) {
     super(message);
     this.name = 'TursoApiError';
-    this.statusCode = statusCode;
+    this.status_code = status_code;
   }
 }
 
 /**
  * Convert various error types to MCP errors
  */
-export function handleError(error: unknown): McpError {
+export function handle_error(error: unknown): McpError {
   if (error instanceof McpError) {
     return error;
   }
   
   if (error instanceof TursoApiError) {
     // Map HTTP status codes to appropriate MCP error codes
-    if (error.statusCode === 401 || error.statusCode === 403) {
+    if (error.status_code === 401 || error.status_code === 403) {
       return new McpError(ErrorCode.InvalidParams, `Authentication error: ${error.message}`);
-    } else if (error.statusCode === 404) {
+    } else if (error.status_code === 404) {
       return new McpError(ErrorCode.InvalidRequest, `Not found: ${error.message}`);
-    } else if (error.statusCode >= 400 && error.statusCode < 500) {
+    } else if (error.status_code >= 400 && error.status_code < 500) {
       return new McpError(ErrorCode.InvalidRequest, error.message);
     } else {
       return new McpError(ErrorCode.InternalError, error.message);

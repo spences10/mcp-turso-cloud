@@ -1,17 +1,17 @@
 /**
  * Token management for the Turso MCP server
  */
-import { getConfig } from '../config.js';
+import { get_config } from '../config.js';
 import { CachedToken, TokenCache } from '../common/types.js';
 import { TursoApiError } from '../common/errors.js';
 
 // In-memory token cache
-const tokenCache: TokenCache = {};
+const token_cache: TokenCache = {};
 
 /**
  * Parse a JWT token to extract its expiration date
  */
-function getTokenExpiration(jwt: string): Date {
+function get_token_expiration(jwt: string): Date {
   try {
     // JWT tokens consist of three parts separated by dots
     const parts = jwt.split('.');
@@ -43,12 +43,12 @@ function getTokenExpiration(jwt: string): Date {
 /**
  * Generate a new token for a database using the organization token
  */
-export async function generateDatabaseToken(
-  databaseName: string,
+export async function generate_database_token(
+  database_name: string,
   permission: 'full-access' | 'read-only' = 'full-access'
 ): Promise<string> {
-  const config = getConfig();
-  const url = `https://api.turso.tech/v1/organizations/${config.TURSO_ORGANIZATION}/databases/${databaseName}/auth/tokens`;
+  const config = get_config();
+  const url = `https://api.turso.tech/v1/organizations/${config.TURSO_ORGANIZATION}/databases/${database_name}/auth/tokens`;
   
   try {
     const response = await fetch(url, {
@@ -67,7 +67,7 @@ export async function generateDatabaseToken(
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.error || response.statusText;
       throw new TursoApiError(
-        `Failed to generate token for database ${databaseName}: ${errorMessage}`,
+        `Failed to generate token for database ${database_name}: ${errorMessage}`,
         response.status
       );
     }
@@ -79,7 +79,7 @@ export async function generateDatabaseToken(
       throw error;
     }
     throw new TursoApiError(
-      `Failed to generate token for database ${databaseName}: ${(error as Error).message}`,
+      `Failed to generate token for database ${database_name}: ${(error as Error).message}`,
       500
     );
   }
@@ -88,26 +88,26 @@ export async function generateDatabaseToken(
 /**
  * Get a token for a database, generating a new one if necessary
  */
-export async function getDatabaseToken(
-  databaseName: string,
+export async function get_database_token(
+  database_name: string,
   permission: 'full-access' | 'read-only' = 'full-access'
 ): Promise<string> {
   // Check if we have a valid token in the cache
-  const cachedToken = tokenCache[databaseName];
-  if (cachedToken && cachedToken.permission === permission) {
+  const cached_token = token_cache[database_name];
+  if (cached_token && cached_token.permission === permission) {
     // Check if the token is still valid (not expired)
-    if (cachedToken.expiresAt > new Date()) {
-      return cachedToken.jwt;
+    if (cached_token.expiresAt > new Date()) {
+      return cached_token.jwt;
     }
   }
   
   // Generate a new token
-  const jwt = await generateDatabaseToken(databaseName, permission);
+  const jwt = await generate_database_token(database_name, permission);
   
   // Cache the token
-  tokenCache[databaseName] = {
+  token_cache[database_name] = {
     jwt,
-    expiresAt: getTokenExpiration(jwt),
+    expiresAt: get_token_expiration(jwt),
     permission,
   };
   
@@ -117,14 +117,14 @@ export async function getDatabaseToken(
 /**
  * Remove expired tokens from the cache
  */
-export function cleanupExpiredTokens(): void {
+export function cleanup_expired_tokens(): void {
   const now = new Date();
-  for (const [databaseName, token] of Object.entries(tokenCache)) {
-    if (token.expiresAt <= now) {
-      delete tokenCache[databaseName];
+  for (const [database_name, token] of Object.entries(token_cache)) {
+    if ((token as CachedToken).expiresAt <= now) {
+      delete token_cache[database_name];
     }
   }
 }
 
 // Set up a periodic cleanup of expired tokens (every hour)
-setInterval(cleanupExpiredTokens, 60 * 60 * 1000);
+setInterval(cleanup_expired_tokens, 60 * 60 * 1000);

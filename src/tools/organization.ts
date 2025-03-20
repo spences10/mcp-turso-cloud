@@ -2,14 +2,14 @@
  * Organization-level tools for the Turso MCP server
  */
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { handleError } from '../common/errors.js';
-import * as organizationClient from '../clients/organization.js';
+import { handle_error } from '../common/errors.js';
+import * as organization_client from '../clients/organization.js';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 
 /**
  * Register organization tools with the server
  */
-export function registerOrganizationTools(server: Server): void {
+export function register_organization_tools(server: Server): void {
   // Register the list of available tools
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
@@ -88,7 +88,7 @@ export function registerOrganizationTools(server: Server): void {
     try {
       // Handle list_databases tool
       if (request.params.name === 'list_databases') {
-        const databases = await organizationClient.listDatabases();
+        const databases = await organization_client.list_databases();
         
         return {
           content: [
@@ -108,7 +108,7 @@ export function registerOrganizationTools(server: Server): void {
           regions?: string[];
         };
         
-        const database = await organizationClient.createDatabase(name, {
+        const database = await organization_client.create_database(name, {
           group,
           regions,
         });
@@ -127,7 +127,7 @@ export function registerOrganizationTools(server: Server): void {
       if (request.params.name === 'delete_database') {
         const { name } = request.params.arguments as { name: string };
         
-        await organizationClient.deleteDatabase(name);
+        await organization_client.delete_database(name);
         
         return {
           content: [
@@ -146,7 +146,7 @@ export function registerOrganizationTools(server: Server): void {
           permission?: 'full-access' | 'read-only';
         };
         
-        const jwt = await organizationClient.generateDatabaseToken(database, permission);
+        const jwt = await organization_client.generate_database_token(database, permission);
         
         return {
           content: [

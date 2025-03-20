@@ -8,9 +8,9 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { getConfig } from './config.js';
-import { handleError } from './common/errors.js';
-import { registerOrganizationTools } from './tools/organization.js';
+import { get_config } from './config.js';
+import { handle_error } from './common/errors.js';
+import { register_organization_tools } from './tools/organization.js';
 
 // Get package info for server metadata
 const __filename = fileURLToPath(import.meta.url);
@@ -63,11 +63,11 @@ class TursoServer {
   private async initialize(): Promise<void> {
     try {
       // Load configuration
-      const config = getConfig();
+      const config = get_config();
       console.error(`Turso MCP server initialized for organization: ${config.TURSO_ORGANIZATION}`);
       
       // Register organization tools
-      registerOrganizationTools(this.server);
+      register_organization_tools(this.server);
       
       console.error('Organization tools registered');
     } catch (error) {

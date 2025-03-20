@@ -1,7 +1,7 @@
 /**
  * Turso Platform API client for organization-level operations
  */
-import { getConfig } from '../config.js';
+import { get_config } from '../config.js';
 import { Database } from '../common/types.js';
 import { TursoApiError } from '../common/errors.js';
 
@@ -13,29 +13,29 @@ const API_BASE_URL = 'https://api.turso.tech/v1';
 /**
  * Get the organization ID from the configuration
  */
-function getOrganizationId(): string {
-  return getConfig().TURSO_ORGANIZATION;
+function get_organization_id(): string {
+  return get_config().TURSO_ORGANIZATION;
 }
 
 /**
  * Get the authorization header for API requests
  */
-function getAuthHeader(): { Authorization: string } {
-  return { Authorization: `Bearer ${getConfig().TURSO_API_TOKEN}` };
+function get_auth_header(): { Authorization: string } {
+  return { Authorization: `Bearer ${get_config().TURSO_API_TOKEN}` };
 }
 
 /**
  * List all databases in the organization
  */
-export async function listDatabases(): Promise<Database[]> {
-  const organizationId = getOrganizationId();
-  const url = `${API_BASE_URL}/organizations/${organizationId}/databases`;
+export async function list_databases(): Promise<Database[]> {
+  const organization_id = get_organization_id();
+  const url = `${API_BASE_URL}/organizations/${organization_id}/databases`;
   
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        ...getAuthHeader(),
+        ...get_auth_header(),
         'Content-Type': 'application/json',
       },
     });
@@ -65,15 +65,15 @@ export async function listDatabases(): Promise<Database[]> {
 /**
  * Create a new database in the organization
  */
-export async function createDatabase(
+export async function create_database(
   name: string,
   options: {
     group?: string;
     regions?: string[];
   } = {}
 ): Promise<Database> {
-  const organizationId = getOrganizationId();
-  const url = `${API_BASE_URL}/organizations/${organizationId}/databases`;
+  const organization_id = get_organization_id();
+  const url = `${API_BASE_URL}/organizations/${organization_id}/databases`;
   
   // Default to "default" group if not specified
   const group = options.group || "default";
@@ -82,7 +82,7 @@ export async function createDatabase(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        ...getAuthHeader(),
+        ...get_auth_header(),
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -116,14 +116,14 @@ export async function createDatabase(
 /**
  * Delete a database from the organization
  */
-export async function deleteDatabase(name: string): Promise<void> {
-  const organizationId = getOrganizationId();
-  const url = `${API_BASE_URL}/organizations/${organizationId}/databases/${name}`;
+export async function delete_database(name: string): Promise<void> {
+  const organization_id = get_organization_id();
+  const url = `${API_BASE_URL}/organizations/${organization_id}/databases/${name}`;
   
   try {
     const response = await fetch(url, {
       method: 'DELETE',
-      headers: getAuthHeader(),
+      headers: get_auth_header(),
     });
     
     if (!response.ok) {
@@ -148,15 +148,15 @@ export async function deleteDatabase(name: string): Promise<void> {
 /**
  * Get details for a specific database
  */
-export async function getDatabaseDetails(name: string): Promise<Database> {
-  const organizationId = getOrganizationId();
-  const url = `${API_BASE_URL}/organizations/${organizationId}/databases/${name}`;
+export async function get_database_details(name: string): Promise<Database> {
+  const organization_id = get_organization_id();
+  const url = `${API_BASE_URL}/organizations/${organization_id}/databases/${name}`;
   
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        ...getAuthHeader(),
+        ...get_auth_header(),
         'Content-Type': 'application/json',
       },
     });
@@ -184,14 +184,14 @@ export async function getDatabaseDetails(name: string): Promise<Database> {
 
 /**
  * Generate a new token for a database
- * This is a wrapper around the token-manager's generateDatabaseToken function
+ * This is a wrapper around the token-manager's generate_database_token function
  * to make it available through the organization client
  */
-export async function generateDatabaseToken(
-  databaseName: string,
+export async function generate_database_token(
+  database_name: string,
   permission: 'full-access' | 'read-only' = 'full-access'
 ): Promise<string> {
   // Import here to avoid circular dependencies
-  const { generateDatabaseToken: generateToken } = await import('./token-manager.js');
-  return generateToken(databaseName, permission);
+  const { generate_database_token: generate_token } = await import('./token-manager.js');
+  return generate_token(database_name, permission);
 }
