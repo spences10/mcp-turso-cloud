@@ -26,7 +26,15 @@
     "model-context-protocol",
     "turso",
     "database",
-    "vector-search"
+    "vector-search",
+    "libsql",
+    "sqlite",
+    "sql",
+    "llm",
+    "ai",
+    "vector-database",
+    "embeddings",
+    "similarity-search"
   ],
   "author": "Scott Spence",
   "license": "MIT",
