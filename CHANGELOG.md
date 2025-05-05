@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.3
+
+### Patch Changes
+
+- be743c2: split read only and destructive queries out
+
 ## 0.0.2
 
 ### Patch Changes
