@@ -110,8 +110,33 @@ export function register_tools(server: Server): void {
 				},
 			},
 			{
+				name: 'execute_read_only_query',
+				description:
+					'Executes a read-only SQL query against a database (e.g., SELECT, PRAGMA)',
+				inputSchema: {
+					type: 'object',
+					properties: {
+						query: {
+							type: 'string',
+							description: 'SQL query to execute',
+						},
+						params: {
+							type: 'object',
+							description: 'Query parameters (optional)',
+						},
+						database: {
+							type: 'string',
+							description:
+								'Database name (optional, uses context if not provided)',
+						},
+					},
+					required: ['query'],
+				},
+			},
+			{
 				name: 'execute_query',
-				description: 'Executes a SQL query against a database',
+				description:
+					'Executes a potentially destructive SQL query against a database (e.g., INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)',
 				inputSchema: {
 					type: 'object',
 					properties: {
@@ -329,6 +354,63 @@ export function register_tools(server: Server): void {
 				};
 			}
 
+			// Handle execute_read_only_query tool
+			if (request.params.name === 'execute_read_only_query') {
+				const {
+					query,
+					params = {},
+					database,
+				} = request.params.arguments as {
+					query: string;
+					params?: Record<string, any>;
+					database?: string;
+				};
+
+				// Validate that this is a read-only query
+				const normalized_query = query.trim().toLowerCase();
+				if (
+					!normalized_query.startsWith('select') &&
+					!normalized_query.startsWith('pragma')
+				) {
+					throw new Error(
+						'Only SELECT and PRAGMA queries are allowed with execute_read_only_query',
+					);
+				}
+
+				const database_name = resolve_database_name(database);
+
+				// Update context if database is explicitly provided
+				if (database) {
+					set_current_database(database);
+				}
+
+				const result = await database_client.execute_query(
+					database_name,
+					query,
+					params,
+				);
+
+				// Format the result for better readability
+				const formatted_result = format_query_result(result);
+
+				return {
+					content: [
+						{
+							type: 'text',
+							text: JSON.stringify(
+								{
+									database: database_name,
+									query,
+									result: formatted_result,
+								},
+								null,
+								2,
+							),
+						},
+					],
+				};
+			}
+
 			// Handle execute_query tool
 			if (request.params.name === 'execute_query') {
 				const {
@@ -340,6 +422,17 @@ export function register_tools(server: Server): void {
 					params?: Record<string, any>;
 					database?: string;
 				};
+
+				// Validate that this is not a read-only query
+				const normalized_query = query.trim().toLowerCase();
+				if (
+					normalized_query.startsWith('select') ||
+					normalized_query.startsWith('pragma')
+				) {
+					throw new Error(
+						'SELECT and PRAGMA queries should use execute_read_only_query',
+					);
+				}
 
 				const database_name = resolve_database_name(database);
 

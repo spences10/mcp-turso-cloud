@@ -23,10 +23,34 @@ databases directly from LLMs.
 ### 💾 Database-Level Operations
 
 - **List Tables**: View all tables in a specific database
-- **Execute Query**: Run SQL queries against your databases
+- **Execute Read-Only Query**: Run SELECT and PRAGMA queries
+  (read-only operations)
+- **Execute Query**: Run potentially destructive SQL queries (INSERT,
+  UPDATE, DELETE, etc.)
 - **Describe Table**: Get schema information for database tables
 - **Vector Search**: Perform vector similarity search using SQLite
   vector extensions
+
+## ⚠️ IMPORTANT: Query Execution Security ⚠️
+
+This server implements a security-focused separation between read-only
+and destructive database operations:
+
+- Use `execute_read_only_query` for SELECT and PRAGMA queries (safe,
+  read-only operations)
+- Use `execute_query` for INSERT, UPDATE, DELETE, CREATE, DROP, and
+  other operations that modify data
+
+This separation allows for different permission levels and approval
+requirements:
+
+- Read-only operations can be auto-approved in many contexts
+- Destructive operations can require explicit approval for safety
+
+**ALWAYS CAREFULLY READ AND REVIEW SQL QUERIES BEFORE APPROVING
+THEM!** This is especially critical for destructive operations that
+can modify or delete data. Take time to understand what each query
+does before allowing it to execute.
 
 ## Two-Level Authentication System
 
@@ -209,13 +233,14 @@ Example:
 }
 ```
 
-#### execute_query
+#### execute_read_only_query
 
-Executes a SQL query against a database.
+Executes a read-only SQL query (SELECT, PRAGMA) against a database.
 
 Parameters:
 
-- `query` (string, required): SQL query to execute
+- `query` (string, required): SQL query to execute (must be SELECT or
+  PRAGMA)
 - `params` (object, optional): Query parameters
 - `database` (string, optional): Database name (uses context if not
   provided)
@@ -226,6 +251,29 @@ Example:
 {
 	"query": "SELECT * FROM users WHERE age > ?",
 	"params": { "1": 21 },
+	"database": "customer_db"
+}
+```
+
+#### execute_query
+
+Executes a potentially destructive SQL query (INSERT, UPDATE, DELETE,
+CREATE, etc.) against a database.
+
+Parameters:
+
+- `query` (string, required): SQL query to execute (cannot be SELECT
+  or PRAGMA)
+- `params` (object, optional): Query parameters
+- `database` (string, optional): Database name (uses context if not
+  provided)
+
+Example:
+
+```json
+{
+	"query": "INSERT INTO users (name, age) VALUES (?, ?)",
+	"params": { "1": "Alice", "2": 30 },
 	"database": "customer_db"
 }
 ```

@@ -57,8 +57,13 @@ class TursoServer {
 						list_tables: {
 							description: 'Lists all tables in a database',
 						},
+						execute_read_only_query: {
+							description:
+								'Executes a read-only SQL query against a database (e.g., SELECT, PRAGMA)',
+						},
 						execute_query: {
-							description: 'Executes a SQL query against a database',
+							description:
+								'Executes a potentially destructive SQL query against a database (e.g., INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)',
 						},
 						describe_table: {
 							description: 'Gets schema information for a table',
