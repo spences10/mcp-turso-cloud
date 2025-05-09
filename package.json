@@ -40,11 +40,11 @@
   "license": "MIT",
   "devDependencies": {
     "@changesets/cli": "^2.29.3",
-    "@types/node": "^22.15.14",
+    "@types/node": "^22.15.17",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.11.1",
     "@libsql/client": "^0.15.4",
     "dotenv": "^16.5.0",
     "zod": "^3.24.4"
