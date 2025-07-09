@@ -47,6 +47,6 @@
     "@modelcontextprotocol/sdk": "^1.13.1",
     "@libsql/client": "^0.15.9",
     "dotenv": "^16.5.0",
-    "zod": "^3.25.67"
+    "zod": "^4.0.0"
   }
 }
