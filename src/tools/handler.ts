@@ -33,18 +33,35 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'create_database',
-				description:
-					'Create a new database in your Turso organization',
+				description: `✓ SAFE OPERATION: Create a new database in your Turso organization.
+
+OPERATION DETAILS:
+- Creates a new empty database instance
+- Database will be deployed to specified regions
+- Default group assignment if not specified
+- Database name must be unique within organization
+
+SECURITY CONSIDERATIONS:
+- Database names are permanent and cannot be changed
+- Consider naming conventions for organization consistency
+- Database creation requires organization-level permissions
+
+BEST PRACTICES:
+- Use descriptive names that indicate purpose
+- Consider environment suffixes (e.g., -dev, -prod)
+- Document database purpose and intended use`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						name: {
 							type: 'string',
-							description: 'Name of the database to create',
+							description:
+								'Name of the database to create - Must be unique within organization',
 						},
 						group: {
 							type: 'string',
-							description: 'Optional group name for the database',
+							description:
+								'Optional group name for the database (defaults to "default")',
 						},
 						regions: {
 							type: 'array',
@@ -52,7 +69,7 @@ export function register_tools(server: Server): void {
 								type: 'string',
 							},
 							description:
-								'Optional list of regions to deploy the database to',
+								'Optional list of regions to deploy the database to (affects latency and compliance)',
 						},
 					},
 					required: ['name'],
@@ -60,13 +77,26 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'delete_database',
-				description: 'Delete a database from your Turso organization',
+				description: `⚠️ CRITICAL WARNING: Permanently delete a database and ALL its data from your Turso organization.
+
+IMPACT: This will destroy ALL data, tables, indexes, and cannot be undone.
+
+BEFORE PROCEEDING:
+- Verify this is the correct database name
+- Ensure you have backups if data recovery is needed
+- Consider if this database is used by other applications
+- Check for any dependent services or applications
+
+CONFIRMATION REQUIRED: The consuming LLM must explicitly confirm this destructive action with the user before proceeding.
+
+SAFETY RECOMMENDATION: Always create backups before database deletion. Use 'list_databases' to verify the correct database name.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						name: {
 							type: 'string',
-							description: 'Name of the database to delete',
+							description:
+								'Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER',
 						},
 					},
 					required: ['name'],
@@ -111,23 +141,42 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'execute_read_only_query',
-				description:
-					'Executes a read-only SQL query against a database (e.g., SELECT, PRAGMA)',
+				description: `✓ SAFE OPERATION: Executes read-only SQL queries that cannot modify data.
+
+ALLOWED OPERATIONS:
+- SELECT - Query data from tables
+- PRAGMA - Database configuration and metadata queries
+- EXPLAIN - Query execution plans
+- WITH (read-only CTEs) - Common table expressions for data analysis
+
+SECURITY FEATURES:
+- Server validates that queries are truly read-only
+- Automatic rejection of any write operations
+- Safe for data exploration and analysis
+- Uses read-only database tokens for additional security
+
+BEST PRACTICES:
+- Use this tool for all data queries and analysis
+- Prefer this over execute_query for SELECT operations
+- Use parameterized queries to prevent SQL injection
+- Consider query performance impact on large datasets`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						query: {
 							type: 'string',
-							description: 'SQL query to execute',
+							description:
+								'Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)',
 						},
 						params: {
 							type: 'object',
-							description: 'Query parameters (optional)',
+							description:
+								'Query parameters (optional) - Use parameterized queries for security',
 						},
 						database: {
 							type: 'string',
 							description:
-								'Database name (optional, uses context if not provided)',
+								'Database name (optional, uses context if not provided) - Specify target database',
 						},
 					},
 					required: ['query'],
@@ -135,23 +184,44 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'execute_query',
-				description:
-					'Executes a potentially destructive SQL query against a database (e.g., INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)',
+				description: `⚠️ DESTRUCTIVE SQL OPERATIONS: Can permanently modify, delete, or restructure database data.
+
+DANGEROUS OPERATIONS INCLUDE:
+- DROP TABLE/INDEX - Removes schema objects permanently
+- DELETE - Removes rows (use WHERE clause to limit scope)
+- UPDATE - Modifies existing data (use WHERE clause to prevent mass updates)
+- TRUNCATE - Removes all rows from table instantly
+- ALTER TABLE - Changes table structure
+- CREATE/DROP DATABASE - Affects entire database
+
+SAFETY RECOMMENDATIONS:
+- Create backups before destructive operations
+- Use transactions (BEGIN; ... COMMIT/ROLLBACK;) for safety
+- Test queries on non-production data first
+- Always use WHERE clauses with DELETE/UPDATE
+- Use SELECT first to verify target rows
+- Consider using LIMIT for batch operations
+
+VALIDATION: Server analyzes queries for dangerous patterns and provides warnings.
+
+CONFIRMATION REQUIRED: The consuming LLM must warn users about destructive operations and seek explicit confirmation before proceeding.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						query: {
 							type: 'string',
-							description: 'SQL query to execute',
+							description:
+								'SQL query to execute - WARNING: Can permanently modify or delete data. Use with extreme caution.',
 						},
 						params: {
 							type: 'object',
-							description: 'Query parameters (optional)',
+							description:
+								'Query parameters (optional) - Use parameterized queries to prevent SQL injection',
 						},
 						database: {
 							type: 'string',
 							description:
-								'Database name (optional, uses context if not provided)',
+								'Database name (optional, uses context if not provided) - Verify correct database before destructive operations',
 						},
 					},
 					required: ['query'],
