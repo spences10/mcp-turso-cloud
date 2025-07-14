@@ -33,23 +33,7 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'create_database',
-				description: `✓ SAFE OPERATION: Create a new database in your Turso organization.
-
-OPERATION DETAILS:
-- Creates a new empty database instance
-- Database will be deployed to specified regions
-- Default group assignment if not specified
-- Database name must be unique within organization
-
-SECURITY CONSIDERATIONS:
-- Database names are permanent and cannot be changed
-- Consider naming conventions for organization consistency
-- Database creation requires organization-level permissions
-
-BEST PRACTICES:
-- Use descriptive names that indicate purpose
-- Consider environment suffixes (e.g., -dev, -prod)
-- Document database purpose and intended use`,
+				description: `✓ SAFE: Create a new database in your Turso organization. Database name must be unique.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
@@ -77,19 +61,7 @@ BEST PRACTICES:
 			},
 			{
 				name: 'delete_database',
-				description: `⚠️ CRITICAL WARNING: Permanently delete a database and ALL its data from your Turso organization.
-
-IMPACT: This will destroy ALL data, tables, indexes, and cannot be undone.
-
-BEFORE PROCEEDING:
-- Verify this is the correct database name
-- Ensure you have backups if data recovery is needed
-- Consider if this database is used by other applications
-- Check for any dependent services or applications
-
-CONFIRMATION REQUIRED: The consuming LLM must explicitly confirm this destructive action with the user before proceeding.
-
-SAFETY RECOMMENDATION: Always create backups before database deletion. Use 'list_databases' to verify the correct database name.`,
+				description: `⚠️ DESTRUCTIVE: Permanently deletes a database and ALL its data. Cannot be undone. Always confirm with user before proceeding and verify correct database name.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
@@ -141,25 +113,7 @@ SAFETY RECOMMENDATION: Always create backups before database deletion. Use 'list
 			},
 			{
 				name: 'execute_read_only_query',
-				description: `✓ SAFE OPERATION: Executes read-only SQL queries that cannot modify data.
-
-ALLOWED OPERATIONS:
-- SELECT - Query data from tables
-- PRAGMA - Database configuration and metadata queries
-- EXPLAIN - Query execution plans
-- WITH (read-only CTEs) - Common table expressions for data analysis
-
-SECURITY FEATURES:
-- Server validates that queries are truly read-only
-- Automatic rejection of any write operations
-- Safe for data exploration and analysis
-- Uses read-only database tokens for additional security
-
-BEST PRACTICES:
-- Use this tool for all data queries and analysis
-- Prefer this over execute_query for SELECT operations
-- Use parameterized queries to prevent SQL injection
-- Consider query performance impact on large datasets`,
+				description: `✓ SAFE: Execute read-only SQL queries (SELECT, PRAGMA, EXPLAIN). Automatically rejects write operations.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
@@ -184,27 +138,8 @@ BEST PRACTICES:
 			},
 			{
 				name: 'execute_query',
-				description: `⚠️ DESTRUCTIVE SQL OPERATIONS: Can permanently modify, delete, or restructure database data.
-
-DANGEROUS OPERATIONS INCLUDE:
-- DROP TABLE/INDEX - Removes schema objects permanently
-- DELETE - Removes rows (use WHERE clause to limit scope)
-- UPDATE - Modifies existing data (use WHERE clause to prevent mass updates)
-- TRUNCATE - Removes all rows from table instantly
-- ALTER TABLE - Changes table structure
-- CREATE/DROP DATABASE - Affects entire database
-
-SAFETY RECOMMENDATIONS:
-- Create backups before destructive operations
-- Use transactions (BEGIN; ... COMMIT/ROLLBACK;) for safety
-- Test queries on non-production data first
-- Always use WHERE clauses with DELETE/UPDATE
-- Use SELECT first to verify target rows
-- Consider using LIMIT for batch operations
-
-VALIDATION: Server analyzes queries for dangerous patterns and provides warnings.
-
-CONFIRMATION REQUIRED: The consuming LLM must warn users about destructive operations and seek explicit confirmation before proceeding.`,
+				description:
+					`⚠️ DESTRUCTIVE: Execute SQL that can modify/delete data (INSERT, UPDATE, DELETE, DROP, ALTER). Always confirm with user before destructive operations.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
@@ -646,6 +581,84 @@ CONFIRMATION REQUIRED: The consuming LLM must warn users about destructive opera
 						},
 					],
 				};
+			}
+
+			// Handle dry_run_query tool
+			if (request.params.name === 'dry_run_query') {
+				const {
+					query,
+					params = {},
+					database,
+				} = request.params.arguments as {
+					query: string;
+					params?: Record<string, any>;
+					database?: string;
+				};
+
+				const database_name = resolve_database_name(database);
+
+				// Update context if database is explicitly provided
+				if (database) {
+					set_current_database(database);
+				}
+
+				// Execute the query in a transaction and rollback
+				try {
+					// Start transaction
+					await database_client.execute_query(
+						database_name,
+						'BEGIN',
+						{},
+					);
+
+					// Execute the actual query to get real results
+					const result = await database_client.execute_query(
+						database_name,
+						query,
+						params,
+					);
+
+					// Rollback to undo any changes
+					await database_client.execute_query(
+						database_name,
+						'ROLLBACK',
+						{},
+					);
+
+					// Format the result for better readability
+					const formatted_result = format_query_result(result);
+
+					return {
+						content: [
+							{
+								type: 'text',
+								text: JSON.stringify(
+									{
+										database: database_name,
+										query,
+										dry_run: true,
+										preview_result: formatted_result,
+										message: 'Dry run completed - no actual changes made',
+									},
+									null,
+									2,
+								),
+							},
+						],
+					};
+				} catch (error) {
+					// If something goes wrong, try to rollback anyway
+					try {
+						await database_client.execute_query(
+							database_name,
+							'ROLLBACK',
+							{},
+						);
+					} catch (rollbackError) {
+						// Ignore rollback errors
+					}
+					throw error;
+				}
 			}
 
 			// If we get here, it's not a recognized tool
