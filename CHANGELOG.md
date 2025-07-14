@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.4
+
+### Patch Changes
+
+- 811af81: update LLM descriptions
+
 ## 0.0.3
 
 ### Patch Changes
