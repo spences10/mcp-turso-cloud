@@ -38,16 +38,16 @@ export function load_config(): Config {
 		});
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			const missingFields = error.errors
+			const missing_fields = error.issues
 				.filter(
-					(err) =>
+					(err: any) =>
 						err.code === 'invalid_type' &&
 						err.received === 'undefined',
 				)
-				.map((err) => err.path.join('.'));
+				.map((err: any) => err.path.join('.'));
 
 			throw new Error(
-				`Missing required configuration: ${missingFields.join(
+				`Missing required configuration: ${missing_fields.join(
 					', ',
 				)}\n` +
 					'Please set these environment variables or add them to your .env file.',
