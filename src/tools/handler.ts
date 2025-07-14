@@ -33,18 +33,19 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'create_database',
-				description:
-					'Create a new database in your Turso organization',
+				description: `✓ SAFE: Create a new database in your Turso organization. Database name must be unique.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						name: {
 							type: 'string',
-							description: 'Name of the database to create',
+							description:
+								'Name of the database to create - Must be unique within organization',
 						},
 						group: {
 							type: 'string',
-							description: 'Optional group name for the database',
+							description:
+								'Optional group name for the database (defaults to "default")',
 						},
 						regions: {
 							type: 'array',
@@ -52,7 +53,7 @@ export function register_tools(server: Server): void {
 								type: 'string',
 							},
 							description:
-								'Optional list of regions to deploy the database to',
+								'Optional list of regions to deploy the database to (affects latency and compliance)',
 						},
 					},
 					required: ['name'],
@@ -60,13 +61,14 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'delete_database',
-				description: 'Delete a database from your Turso organization',
+				description: `⚠️ DESTRUCTIVE: Permanently deletes a database and ALL its data. Cannot be undone. Always confirm with user before proceeding and verify correct database name.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						name: {
 							type: 'string',
-							description: 'Name of the database to delete',
+							description:
+								'Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER',
 						},
 					},
 					required: ['name'],
@@ -111,23 +113,24 @@ export function register_tools(server: Server): void {
 			},
 			{
 				name: 'execute_read_only_query',
-				description:
-					'Executes a read-only SQL query against a database (e.g., SELECT, PRAGMA)',
+				description: `✓ SAFE: Execute read-only SQL queries (SELECT, PRAGMA, EXPLAIN). Automatically rejects write operations.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						query: {
 							type: 'string',
-							description: 'SQL query to execute',
+							description:
+								'Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)',
 						},
 						params: {
 							type: 'object',
-							description: 'Query parameters (optional)',
+							description:
+								'Query parameters (optional) - Use parameterized queries for security',
 						},
 						database: {
 							type: 'string',
 							description:
-								'Database name (optional, uses context if not provided)',
+								'Database name (optional, uses context if not provided) - Specify target database',
 						},
 					},
 					required: ['query'],
@@ -136,22 +139,24 @@ export function register_tools(server: Server): void {
 			{
 				name: 'execute_query',
 				description:
-					'Executes a potentially destructive SQL query against a database (e.g., INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)',
+					`⚠️ DESTRUCTIVE: Execute SQL that can modify/delete data (INSERT, UPDATE, DELETE, DROP, ALTER). Always confirm with user before destructive operations.`,
 				inputSchema: {
 					type: 'object',
 					properties: {
 						query: {
 							type: 'string',
-							description: 'SQL query to execute',
+							description:
+								'SQL query to execute - WARNING: Can permanently modify or delete data. Use with extreme caution.',
 						},
 						params: {
 							type: 'object',
-							description: 'Query parameters (optional)',
+							description:
+								'Query parameters (optional) - Use parameterized queries to prevent SQL injection',
 						},
 						database: {
 							type: 'string',
 							description:
-								'Database name (optional, uses context if not provided)',
+								'Database name (optional, uses context if not provided) - Verify correct database before destructive operations',
 						},
 					},
 					required: ['query'],
