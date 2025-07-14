@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/spences10-mcp-turso-cloud-badge.png)](https://mseep.ai/app/spences10-mcp-turso-cloud)
+
 # mcp-turso-cloud
 
 A Model Context Protocol (MCP) server that provides integration with
