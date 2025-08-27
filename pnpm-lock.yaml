@@ -19,7 +19,7 @@ importers:
         version: 17.2.1
       zod:
         specifier: ^4.0.14
-        version: 4.1.1
+        version: 4.1.4
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.5
@@ -857,8 +857,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.1:
-    resolution: {integrity: sha512-SgMZK/h8Tigt9nnKkfJMvB/mKjiJXaX26xegP4sa+0wHIFVFWVlsQGdhklDmuargBD3Hsi3rsQRIzwJIhTPJHA==}
+  zod@4.1.4:
+    resolution: {integrity: sha512-2YqJuWkU6IIK9qcE4k1lLLhyZ6zFw7XVRdQGpV97jEIZwTrscUw+DY31Xczd8nwaoksyJUIxCojZXwckJovWxA==}
 
 snapshots:
 
@@ -1763,4 +1763,4 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.1.1: {}
+  zod@4.1.4: {}
