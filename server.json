@@ -1,5 +1,5 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-16/server.schema.json",
   "name": "io.github.spences10/mcp-turso-cloud",
   "description": "MCP server for integrating Turso with LLMs",
   "status": "active",
@@ -7,50 +7,50 @@
     "url": "https://github.com/spences10/mcp-turso-cloud",
     "source": "github"
   },
-  "version": "0.0.6",
+  "version": "0.0.8",
   "packages": [
     {
-      "registry_type": "npm",
-      "registry_base_url": "https://registry.npmjs.org",
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-turso-cloud",
-      "version": "0.0.6",
+      "version": "0.0.8",
       "transport": {
         "type": "stdio"
       },
-      "environment_variables": [
+      "environmentVariables": [
         {
           "description": "Turso Platform API token for authentication",
-          "is_required": true,
+          "isRequired": true,
           "format": "string",
-          "is_secret": true,
+          "isSecret": true,
           "name": "TURSO_API_TOKEN"
         },
         {
           "description": "Turso organization name",
-          "is_required": true,
+          "isRequired": true,
           "format": "string",
-          "is_secret": false,
+          "isSecret": false,
           "name": "TURSO_ORGANIZATION"
         },
         {
           "description": "Default database name (optional)",
-          "is_required": false,
+          "isRequired": false,
           "format": "string",
-          "is_secret": false,
+          "isSecret": false,
           "name": "TURSO_DEFAULT_DATABASE"
         },
         {
           "description": "Token expiration time (default: 7d)",
-          "is_required": false,
+          "isRequired": false,
           "format": "string",
-          "is_secret": false,
+          "isSecret": false,
           "name": "TOKEN_EXPIRATION"
         },
         {
           "description": "Default token permission level (default: full-access)",
-          "is_required": false,
+          "isRequired": false,
           "format": "string",
-          "is_secret": false,
+          "isSecret": false,
           "name": "TOKEN_PERMISSION"
         }
       ]
