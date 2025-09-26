@@ -2,6 +2,7 @@
   "name": "mcp-turso-cloud",
   "version": "0.0.5",
   "description": "MCP server for integrating Turso with LLMs",
+  "mcpName": "io.github.spences10/mcp-turso-cloud",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +20,9 @@
     "dev": "npx @modelcontextprotocol/inspector dist/index.js",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm run build && changeset publish"
+    "release": "pnpm run build && changeset publish",
+    "sync-server-json": "node -e \"const pkg = require('./package.json'); const server = require('./server.json'); server.version = pkg.version; server.packages[0].version = pkg.version; require('fs').writeFileSync('./server.json', JSON.stringify(server, null, 2));\"",
+    "publish-mcp": "pnpm run sync-server-json && mcp-publisher publish"
   },
   "keywords": [
     "mcp",
