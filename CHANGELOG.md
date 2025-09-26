@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.9
+
+### Patch Changes
+
+- de4ba38: derp server.json schema!
+
 ## 0.0.7
 
 ### Patch Changes
