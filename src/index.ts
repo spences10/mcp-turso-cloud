@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { McpServer } from 'tmcp';
+import { ZodJsonSchemaAdapter } from '@tmcp/adapter-zod';
+import { StdioTransport } from '@tmcp/transport-stdio';
+import { z } from 'zod';
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -22,68 +24,31 @@ const { name, version } = pkg;
  * Main class for the Turso MCP server
  */
 class TursoServer {
-	private server: Server;
+	private server: McpServer;
 
 	constructor() {
 		// Initialize the server with metadata
-		this.server = new Server(
+		const adapter = new ZodJsonSchemaAdapter();
+		this.server = new McpServer(
 			{
 				name,
 				version,
+				description: 'MCP server for integrating Turso with LLMs',
 			},
 			{
+				adapter,
 				capabilities: {
-					resources: {},
-					tools: {
-						// Organization tools
-						list_databases: {
-							description:
-								'List all databases in your Turso organization',
-						},
-						create_database: {
-							description:
-								'Create a new database in your Turso organization',
-						},
-						delete_database: {
-							description:
-								'Delete a database from your Turso organization',
-						},
-						generate_database_token: {
-							description:
-								'Generate a new token for a specific database',
-						},
-
-						// Database tools
-						list_tables: {
-							description: 'Lists all tables in a database',
-						},
-						execute_read_only_query: {
-							description:
-								'Executes a read-only SQL query against a database (e.g., SELECT, PRAGMA)',
-						},
-						execute_query: {
-							description:
-								'Executes a potentially destructive SQL query against a database (e.g., INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)',
-						},
-						describe_table: {
-							description: 'Gets schema information for a table',
-						},
-						vector_search: {
-							description: 'Performs vector similarity search',
-						},
-					},
+					tools: { listChanged: true },
 				},
 			},
 		);
 
-		// Set up error handling
-		this.server.onerror = (error) => {
-			console.error('[MCP Error]', error);
-		};
-
 		// Handle process termination
 		process.on('SIGINT', async () => {
-			await this.server.close();
+			process.exit(0);
+		});
+
+		process.on('SIGTERM', async () => {
 			process.exit(0);
 		});
 	}
@@ -118,8 +83,8 @@ class TursoServer {
 			await this.initialize();
 
 			// Connect to the transport
-			const transport = new StdioServerTransport();
-			await this.server.connect(transport);
+			const transport = new StdioTransport(this.server);
+			transport.listen();
 
 			console.error('Turso MCP server running on stdio');
 		} catch (error) {

@@ -1,11 +1,8 @@
 /**
  * Unified tool handler for the Turso MCP server
  */
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
-import {
-	CallToolRequestSchema,
-	ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { McpServer } from 'tmcp';
+import { z } from 'zod';
 import * as database_client from '../clients/database.js';
 import * as organization_client from '../clients/organization.js';
 import { ResultSet } from '../common/types.js';
@@ -14,363 +11,203 @@ import {
 	set_current_database,
 } from './context.js';
 
+// Zod schemas for tool inputs
+const EmptySchema = z.object({});
+
+const CreateDatabaseSchema = z.object({
+	name: z.string().describe('Name of the database to create - Must be unique within organization'),
+	group: z.string().optional().describe('Optional group name for the database (defaults to "default")'),
+	regions: z.array(z.string()).optional().describe('Optional list of regions to deploy the database to (affects latency and compliance)'),
+});
+
+const DeleteDatabaseSchema = z.object({
+	name: z.string().describe('Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER'),
+});
+
+const GenerateDatabaseTokenSchema = z.object({
+	database: z.string().describe('Name of the database to generate a token for'),
+	permission: z.enum(['full-access', 'read-only']).optional().describe('Permission level for the token'),
+});
+
+const DatabaseOnlySchema = z.object({
+	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+});
+
+const QuerySchema = z.object({
+	query: z.string().describe('SQL query to execute'),
+	params: z.record(z.string(), z.any()).optional().describe('Query parameters (optional) - Use parameterized queries for security'),
+	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+});
+
+const ReadOnlyQuerySchema = z.object({
+	query: z.string().describe('Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)'),
+	params: z.record(z.string(), z.any()).optional().describe('Query parameters (optional) - Use parameterized queries for security'),
+	database: z.string().optional().describe('Database name (optional, uses context if not provided) - Specify target database'),
+});
+
+const DescribeTableSchema = z.object({
+	table: z.string().describe('Table name'),
+	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+});
+
+const VectorSearchSchema = z.object({
+	table: z.string().describe('Table name'),
+	vector_column: z.string().describe('Column containing vectors'),
+	query_vector: z.array(z.number()).describe('Query vector for similarity search'),
+	limit: z.number().optional().describe('Maximum number of results (optional, default 10)'),
+	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+});
+
+/**
+ * Create a tool error response
+ */
+function create_tool_error_response(error: unknown) {
+	return {
+		content: [
+			{
+				type: 'text' as const,
+				text: JSON.stringify(
+					{
+						error: 'internal_error',
+						message:
+							error instanceof Error
+								? error.message
+								: 'Unknown error',
+					},
+					null,
+					2,
+				),
+			},
+		],
+		isError: true,
+	};
+}
+
+/**
+ * Create a tool success response
+ */
+function create_tool_response(data: any) {
+	return {
+		content: [
+			{
+				type: 'text' as const,
+				text: JSON.stringify(data, null, 2),
+			},
+		],
+	};
+}
+
 /**
  * Register all tools with the server
  */
-export function register_tools(server: Server): void {
-	// Register the list of available tools
-	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: [
-			// Organization tools
-			{
-				name: 'list_databases',
-				description: 'List all databases in your Turso organization',
-				inputSchema: {
-					type: 'object',
-					properties: {},
-					required: [],
-				},
-			},
-			{
-				name: 'create_database',
-				description: `✓ SAFE: Create a new database in your Turso organization. Database name must be unique.`,
-				inputSchema: {
-					type: 'object',
-					properties: {
-						name: {
-							type: 'string',
-							description:
-								'Name of the database to create - Must be unique within organization',
-						},
-						group: {
-							type: 'string',
-							description:
-								'Optional group name for the database (defaults to "default")',
-						},
-						regions: {
-							type: 'array',
-							items: {
-								type: 'string',
-							},
-							description:
-								'Optional list of regions to deploy the database to (affects latency and compliance)',
-						},
-					},
-					required: ['name'],
-				},
-			},
-			{
-				name: 'delete_database',
-				description: `⚠️ DESTRUCTIVE: Permanently deletes a database and ALL its data. Cannot be undone. Always confirm with user before proceeding and verify correct database name.`,
-				inputSchema: {
-					type: 'object',
-					properties: {
-						name: {
-							type: 'string',
-							description:
-								'Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER',
-						},
-					},
-					required: ['name'],
-				},
-			},
-			{
-				name: 'generate_database_token',
-				description: 'Generate a new token for a specific database',
-				inputSchema: {
-					type: 'object',
-					properties: {
-						database: {
-							type: 'string',
-							description:
-								'Name of the database to generate a token for',
-						},
-						permission: {
-							type: 'string',
-							enum: ['full-access', 'read-only'],
-							description: 'Permission level for the token',
-						},
-					},
-					required: ['database'],
-				},
-			},
-
-			// Database tools
-			{
-				name: 'list_tables',
-				description: 'Lists all tables in a database',
-				inputSchema: {
-					type: 'object',
-					properties: {
-						database: {
-							type: 'string',
-							description:
-								'Database name (optional, uses context if not provided)',
-						},
-					},
-					required: [],
-				},
-			},
-			{
-				name: 'execute_read_only_query',
-				description: `✓ SAFE: Execute read-only SQL queries (SELECT, PRAGMA, EXPLAIN). Automatically rejects write operations.`,
-				inputSchema: {
-					type: 'object',
-					properties: {
-						query: {
-							type: 'string',
-							description:
-								'Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)',
-						},
-						params: {
-							type: 'object',
-							description:
-								'Query parameters (optional) - Use parameterized queries for security',
-						},
-						database: {
-							type: 'string',
-							description:
-								'Database name (optional, uses context if not provided) - Specify target database',
-						},
-					},
-					required: ['query'],
-				},
-			},
-			{
-				name: 'execute_query',
-				description:
-					`⚠️ DESTRUCTIVE: Execute SQL that can modify/delete data (INSERT, UPDATE, DELETE, DROP, ALTER). Always confirm with user before destructive operations.`,
-				inputSchema: {
-					type: 'object',
-					properties: {
-						query: {
-							type: 'string',
-							description:
-								'SQL query to execute - WARNING: Can permanently modify or delete data. Use with extreme caution.',
-						},
-						params: {
-							type: 'object',
-							description:
-								'Query parameters (optional) - Use parameterized queries to prevent SQL injection',
-						},
-						database: {
-							type: 'string',
-							description:
-								'Database name (optional, uses context if not provided) - Verify correct database before destructive operations',
-						},
-					},
-					required: ['query'],
-				},
-			},
-			{
-				name: 'describe_table',
-				description: 'Gets schema information for a table',
-				inputSchema: {
-					type: 'object',
-					properties: {
-						table: {
-							type: 'string',
-							description: 'Table name',
-						},
-						database: {
-							type: 'string',
-							description:
-								'Database name (optional, uses context if not provided)',
-						},
-					},
-					required: ['table'],
-				},
-			},
-			{
-				name: 'vector_search',
-				description: 'Performs vector similarity search',
-				inputSchema: {
-					type: 'object',
-					properties: {
-						table: {
-							type: 'string',
-							description: 'Table name',
-						},
-						vector_column: {
-							type: 'string',
-							description: 'Column containing vectors',
-						},
-						query_vector: {
-							type: 'array',
-							items: {
-								type: 'number',
-							},
-							description: 'Query vector for similarity search',
-						},
-						limit: {
-							type: 'number',
-							description:
-								'Maximum number of results (optional, default 10)',
-						},
-						database: {
-							type: 'string',
-							description:
-								'Database name (optional, uses context if not provided)',
-						},
-					},
-					required: ['table', 'vector_column', 'query_vector'],
-				},
-			},
-		],
-	}));
-
-	// Register the unified tool handler
-	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		try {
-			// Organization tools
-
-			// Handle list_databases tool
-			if (request.params.name === 'list_databases') {
+export function register_tools(server: McpServer<any>): void {
+	// Organization tools
+	server.tool(
+		{
+			name: 'list_databases',
+			description: 'List all databases in your Turso organization',
+			schema: EmptySchema,
+		},
+		async () => {
+			try {
 				const databases = await organization_client.list_databases();
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify({ databases }, null, 2),
-						},
-					],
-				};
+				return create_tool_response({ databases });
+			} catch (error) {
+				return create_tool_error_response(error);
 			}
+		},
+	);
 
-			// Handle create_database tool
-			if (request.params.name === 'create_database') {
-				const { name, group, regions } = request.params.arguments as {
-					name: string;
-					group?: string;
-					regions?: string[];
-				};
-
+	server.tool(
+		{
+			name: 'create_database',
+			description: `✓ SAFE: Create a new database in your Turso organization. Database name must be unique.`,
+			schema: CreateDatabaseSchema,
+		},
+		async ({ name, group, regions }) => {
+			try {
 				const database = await organization_client.create_database(
 					name,
-					{
-						group,
-						regions,
-					},
+					{ group, regions },
 				);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify({ database }, null, 2),
-						},
-					],
-				};
+				return create_tool_response({ database });
+			} catch (error) {
+				return create_tool_error_response(error);
 			}
+		},
+	);
 
-			// Handle delete_database tool
-			if (request.params.name === 'delete_database') {
-				const { name } = request.params.arguments as { name: string };
-
+	server.tool(
+		{
+			name: 'delete_database',
+			description: `⚠️ DESTRUCTIVE: Permanently deletes a database and ALL its data. Cannot be undone. Always confirm with user before proceeding and verify correct database name.`,
+			schema: DeleteDatabaseSchema,
+		},
+		async ({ name }) => {
+			try {
 				await organization_client.delete_database(name);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									success: true,
-									message: `Database '${name}' deleted successfully`,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return create_tool_response({
+					success: true,
+					message: `Database '${name}' deleted successfully`,
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
 			}
+		},
+	);
 
-			// Handle generate_database_token tool
-			if (request.params.name === 'generate_database_token') {
-				const { database, permission = 'full-access' } = request
-					.params.arguments as {
-					database: string;
-					permission?: 'full-access' | 'read-only';
-				};
-
+	server.tool(
+		{
+			name: 'generate_database_token',
+			description: 'Generate a new token for a specific database',
+			schema: GenerateDatabaseTokenSchema,
+		},
+		async ({ database, permission = 'full-access' }) => {
+			try {
 				const jwt = await organization_client.generate_database_token(
 					database,
 					permission,
 				);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									success: true,
-									database,
-									token: {
-										jwt,
-										permission,
-										database,
-									},
-									message: `Token generated successfully for database '${database}' with '${permission}' permissions`,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
-			}
-
-			// Database tools
-
-			// Handle list_tables tool
-			if (request.params.name === 'list_tables') {
-				const { database } = request.params.arguments as {
-					database?: string;
-				};
-
-				const database_name = resolve_database_name(database);
-
-				// Update context if database is explicitly provided
-				if (database) {
-					set_current_database(database);
-				}
-
-				const tables = await database_client.list_tables(
-					database_name,
-				);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									database: database_name,
-									tables,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
-			}
-
-			// Handle execute_read_only_query tool
-			if (request.params.name === 'execute_read_only_query') {
-				const {
-					query,
-					params = {},
+				return create_tool_response({
+					success: true,
 					database,
-				} = request.params.arguments as {
-					query: string;
-					params?: Record<string, any>;
-					database?: string;
-				};
+					token: { jwt, permission, database },
+					message: `Token generated successfully for database '${database}' with '${permission}' permissions`,
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
+			}
+		},
+	);
 
+	// Database tools
+	server.tool(
+		{
+			name: 'list_tables',
+			description: 'Lists all tables in a database',
+			schema: DatabaseOnlySchema,
+		},
+		async ({ database }) => {
+			try {
+				const database_name = resolve_database_name(database);
+				if (database) set_current_database(database);
+
+				const tables = await database_client.list_tables(database_name);
+				return create_tool_response({ database: database_name, tables });
+			} catch (error) {
+				return create_tool_error_response(error);
+			}
+		},
+	);
+
+	server.tool(
+		{
+			name: 'execute_read_only_query',
+			description: `✓ SAFE: Execute read-only SQL queries (SELECT, PRAGMA, EXPLAIN). Automatically rejects write operations.`,
+			schema: ReadOnlyQuerySchema,
+		},
+		async ({ query, params = {}, database }) => {
+			try {
 				// Validate that this is a read-only query
 				const normalized_query = query.trim().toLowerCase();
 				if (
@@ -383,11 +220,7 @@ export function register_tools(server: Server): void {
 				}
 
 				const database_name = resolve_database_name(database);
-
-				// Update context if database is explicitly provided
-				if (database) {
-					set_current_database(database);
-				}
+				if (database) set_current_database(database);
 
 				const result = await database_client.execute_query(
 					database_name,
@@ -395,39 +228,26 @@ export function register_tools(server: Server): void {
 					params,
 				);
 
-				// Format the result for better readability
 				const formatted_result = format_query_result(result);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									database: database_name,
-									query,
-									result: formatted_result,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
-			}
-
-			// Handle execute_query tool
-			if (request.params.name === 'execute_query') {
-				const {
+				return create_tool_response({
+					database: database_name,
 					query,
-					params = {},
-					database,
-				} = request.params.arguments as {
-					query: string;
-					params?: Record<string, any>;
-					database?: string;
-				};
+					result: formatted_result,
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
+			}
+		},
+	);
 
+	server.tool(
+		{
+			name: 'execute_query',
+			description: `⚠️ DESTRUCTIVE: Execute SQL that can modify/delete data (INSERT, UPDATE, DELETE, DROP, ALTER). Always confirm with user before destructive operations.`,
+			schema: QuerySchema,
+		},
+		async ({ query, params = {}, database }) => {
+			try {
 				// Validate that this is not a read-only query
 				const normalized_query = query.trim().toLowerCase();
 				if (
@@ -440,11 +260,7 @@ export function register_tools(server: Server): void {
 				}
 
 				const database_name = resolve_database_name(database);
-
-				// Update context if database is explicitly provided
-				if (database) {
-					set_current_database(database);
-				}
+				if (database) set_current_database(database);
 
 				const result = await database_client.execute_query(
 					database_name,
@@ -452,95 +268,63 @@ export function register_tools(server: Server): void {
 					params,
 				);
 
-				// Format the result for better readability
 				const formatted_result = format_query_result(result);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									database: database_name,
-									query,
-									result: formatted_result,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return create_tool_response({
+					database: database_name,
+					query,
+					result: formatted_result,
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
 			}
+		},
+	);
 
-			// Handle describe_table tool
-			if (request.params.name === 'describe_table') {
-				const { table, database } = request.params.arguments as {
-					table: string;
-					database?: string;
-				};
-
+	server.tool(
+		{
+			name: 'describe_table',
+			description: 'Gets schema information for a table',
+			schema: DescribeTableSchema,
+		},
+		async ({ table, database }) => {
+			try {
 				const database_name = resolve_database_name(database);
-
-				// Update context if database is explicitly provided
-				if (database) {
-					set_current_database(database);
-				}
+				if (database) set_current_database(database);
 
 				const columns = await database_client.describe_table(
 					database_name,
 					table,
 				);
 
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									database: database_name,
-									table,
-									columns: columns.map((col) => ({
-										name: col.name,
-										type: col.type,
-										nullable: col.notnull === 0,
-										default_value: col.dflt_value,
-										primary_key: col.pk === 1,
-									})),
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
-			}
-
-			// Handle vector_search tool
-			if (request.params.name === 'vector_search') {
-				const {
+				return create_tool_response({
+					database: database_name,
 					table,
-					vector_column,
-					query_vector,
-					limit = 10,
-					database,
-				} = request.params.arguments as {
-					table: string;
-					vector_column: string;
-					query_vector: number[];
-					limit?: number;
-					database?: string;
-				};
+					columns: columns.map((col) => ({
+						name: col.name,
+						type: col.type,
+						nullable: col.notnull === 0,
+						default_value: col.dflt_value,
+						primary_key: col.pk === 1,
+					})),
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
+			}
+		},
+	);
 
+	server.tool(
+		{
+			name: 'vector_search',
+			description: 'Performs vector similarity search',
+			schema: VectorSearchSchema,
+		},
+		async ({ table, vector_column, query_vector, limit = 10, database }) => {
+			try {
 				const database_name = resolve_database_name(database);
-
-				// Update context if database is explicitly provided
-				if (database) {
-					set_current_database(database);
-				}
+				if (database) set_current_database(database);
 
 				// Construct a vector search query using SQLite's vector functions
-				// This assumes the vector column is stored in a format compatible with SQLite's vector1 extension
 				const vector_string = query_vector.join(',');
 				const query = `
           SELECT *, vector_distance(${vector_column}, vector_from_json(?)) as distance
@@ -560,44 +344,19 @@ export function register_tools(server: Server): void {
 					params,
 				);
 
-				// Format the result for better readability
 				const formatted_result = format_query_result(result);
-
-				return {
-					content: [
-						{
-							type: 'text',
-							text: JSON.stringify(
-								{
-									database: database_name,
-									table,
-									vector_column,
-									query_vector,
-									results: formatted_result,
-								},
-								null,
-								2,
-							),
-						},
-					],
-				};
+				return create_tool_response({
+					database: database_name,
+					table,
+					vector_column,
+					query_vector,
+					results: formatted_result,
+				});
+			} catch (error) {
+				return create_tool_error_response(error);
 			}
-
-			// If we get here, it's not a recognized tool
-			throw new Error(`Unknown tool: ${request.params.name}`);
-		} catch (error) {
-			console.error('Error executing tool:', error);
-			return {
-				content: [
-					{
-						type: 'text',
-						text: `Error: ${(error as Error).message}`,
-					},
-				],
-				isError: true,
-			};
-		}
-	});
+		},
+	);
 }
 
 /**
