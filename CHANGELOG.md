@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.7
+
+### Patch Changes
+
+- d8b4b9b: mcp registry faff
+
 ## 0.0.6
 
 ### Patch Changes
