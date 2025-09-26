@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.5
+
+### Patch Changes
+
+- 280568a: reorganized to use tmcp format
+
 ## 0.0.4
 
 ### Patch Changes

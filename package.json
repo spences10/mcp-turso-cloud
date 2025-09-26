@@ -1,6 +1,6 @@
 {
   "name": "mcp-turso-cloud",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "MCP server for integrating Turso with LLMs",
   "type": "module",
   "main": "dist/index.js",
