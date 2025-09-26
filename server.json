@@ -7,13 +7,13 @@
     "url": "https://github.com/spences10/mcp-turso-cloud",
     "source": "github"
   },
-  "version": "0.0.8",
+  "version": "0.0.9",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "mcp-turso-cloud",
-      "version": "0.0.8",
+      "version": "0.0.9",
       "transport": {
         "type": "stdio"
       },
