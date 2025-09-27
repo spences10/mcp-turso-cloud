@@ -17,9 +17,6 @@ importers:
       '@tmcp/transport-stdio':
         specifier: ^0.3.1
         version: 0.3.1(tmcp@1.14.0(typescript@5.9.2))
-      dotenv:
-        specifier: ^17.2.2
-        version: 17.2.2
       tmcp:
         specifier: ^1.14.0
         version: 1.14.0(typescript@5.9.2)
@@ -264,10 +261,6 @@ packages:
   dir-glob@3.0.1:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
-
-  dotenv@17.2.2:
-    resolution: {integrity: sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q==}
-    engines: {node: '>=12'}
 
   enquirer@2.4.1:
     resolution: {integrity: sha512-rRqJg/6gd538VHvR3PSrdRBb/1Vy2YfzHqzvbhGIQpDRKIa4FgV/54b5Q1xYSxOOwKvjXweS26E0Q+nAMwp2pQ==}
@@ -894,8 +887,6 @@ snapshots:
   dir-glob@3.0.1:
     dependencies:
       path-type: 4.0.0
-
-  dotenv@17.2.2: {}
 
   enquirer@2.4.1:
     dependencies:

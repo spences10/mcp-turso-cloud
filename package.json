@@ -50,7 +50,6 @@
     "@libsql/client": "^0.15.15",
     "@tmcp/adapter-zod": "^0.1.6",
     "@tmcp/transport-stdio": "^0.3.1",
-    "dotenv": "^17.2.2",
     "tmcp": "^1.14.0",
     "zod": "^4.1.11"
   }

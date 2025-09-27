@@ -1,11 +1,7 @@
 /**
  * Configuration management for the Turso MCP server
  */
-import dotenv from 'dotenv';
 import { z } from 'zod';
-
-// Load environment variables from .env file
-dotenv.config();
 
 // Define configuration schema as specified in the plan
 export const ConfigSchema = z.object({
@@ -49,8 +45,7 @@ export function load_config(): Config {
 			throw new Error(
 				`Missing required configuration: ${missing_fields.join(
 					', ',
-				)}\n` +
-					'Please set these environment variables or add them to your .env file.',
+				)}\n` + 'Please set these environment variables.',
 			);
 		}
 		throw error;
