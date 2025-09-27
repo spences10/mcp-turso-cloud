@@ -1,5 +1,13 @@
 # mcp-turso-cloud
 
+## 0.0.10
+
+### Patch Changes
+
+- e773bb7: Fix, positional parameters with ? and numbered params like
+  {"1": 1}
+- afcda74: remove dotenv
+
 ## 0.0.9
 
 ### Patch Changes
