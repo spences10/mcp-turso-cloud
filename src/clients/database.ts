@@ -6,6 +6,35 @@ import { TursoApiError } from '../common/errors.js';
 import { get_config } from '../config.js';
 import { get_database_token } from './token-manager.js';
 
+/**
+ * Convert parameters to the format expected by libSQL client
+ */
+function convert_parameters(params: Record<string, any>): any {
+	if (!params || Object.keys(params).length === 0) {
+		return {};
+	}
+
+	// Check if parameters are positional (numbered keys like "1", "2", etc.)
+	const keys = Object.keys(params);
+	const is_positional = keys.every((key) => /^\d+$/.test(key));
+
+	if (is_positional) {
+		// Convert to array for positional parameters
+		const max_index = Math.max(...keys.map((k) => parseInt(k)));
+		const param_array: any[] = new Array(max_index);
+
+		for (const [key, value] of Object.entries(params)) {
+			const index = parseInt(key) - 1; // Convert 1-based to 0-based indexing
+			param_array[index] = value;
+		}
+
+		return param_array;
+	}
+
+	// Return as-is for named parameters
+	return params;
+}
+
 // Cache of database clients
 const client_cache: Record<string, Client> = {};
 
@@ -109,7 +138,7 @@ export async function execute_query(
 		// Execute the query
 		return await client.execute({
 			sql: query,
-			args: params,
+			args: convert_parameters(params),
 		});
 	} catch (error) {
 		throw new TursoApiError(
