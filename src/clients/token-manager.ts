@@ -24,19 +24,22 @@ function get_token_expiration(jwt: string): Date {
 			Buffer.from(parts[1], 'base64').toString('utf8'),
 		);
 
-		// The exp claim contains the expiration timestamp in seconds
-		if (typeof payload.exp !== 'number') {
-			throw new Error('JWT missing expiration');
-		}
-
-		// Convert to milliseconds and create a Date object
-		return new Date(payload.exp * 1000);
-	} catch (error) {
-		// If parsing fails, set a default expiration of 1 hour from now
-		console.error('Error parsing JWT expiration:', error);
+	// The exp claim contains the expiration timestamp in seconds
+	if (typeof payload.exp !== 'number') {
+		// Turso tokens don't always include expiration, use default
 		const expiration = new Date();
 		expiration.setHours(expiration.getHours() + 1);
 		return expiration;
+	}
+
+	// Convert to milliseconds and create a Date object
+	return new Date(payload.exp * 1000);
+} catch (error) {
+	// If parsing fails, set a default expiration of 1 hour from now
+	// This is normal for Turso tokens that don't include exp claim
+	const expiration = new Date();
+	expiration.setHours(expiration.getHours() + 1);
+	return expiration;
 	}
 }
 
