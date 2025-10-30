@@ -211,7 +211,6 @@ npm run build
 
 - Add automated tests for schema conversion
 - Add CI/CD checks for Draft-07 compatibility
-- Consider making adapter selection configurable via environment variable
 
 ## Contributing
 
