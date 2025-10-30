@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { McpServer } from 'tmcp';
-import { ZodJsonSchemaAdapter } from '@tmcp/adapter-zod';
+import { Draft07JsonSchemaAdapter } from './adapters/draft07-adapter.js';
 import { StdioTransport } from '@tmcp/transport-stdio';
 import { z } from 'zod';
 
@@ -28,7 +28,8 @@ class TursoServer {
 
 	constructor() {
 		// Initialize the server with metadata
-		const adapter = new ZodJsonSchemaAdapter();
+		// Use Draft07JsonSchemaAdapter for GitHub Copilot compatibility
+		const adapter = new Draft07JsonSchemaAdapter();
 		this.server = new McpServer(
 			{
 				name,
