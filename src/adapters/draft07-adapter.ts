@@ -52,8 +52,16 @@ export class Draft07JsonSchemaAdapter extends JsonSchemaAdapter<ZodSchema> {
 	 * @returns The JSON Schema Draft-07 representation
 	 */
 	async toJsonSchema(schema: ZodSchema): Promise<any> {
-		// Use Zod's built-in toJSONSchema (generates Draft 2020-12)
-		const jsonSchema2020 = z.toJSONSchema(schema);
+		let jsonSchema2020: any;
+		try {
+			jsonSchema2020 = z.toJSONSchema(schema);
+		} catch (err) {
+			throw new Error(`Failed to convert Zod schema to JSON Schema: ${err instanceof Error ? err.message : String(err)}`);
+		}
+
+		if (typeof jsonSchema2020 !== 'object' || jsonSchema2020 === null) {
+			throw new Error('z.toJSONSchema did not return a valid object');
+		}
 		
 		// Convert to Draft-07
 		const jsonSchema07 = convertToDraft07(jsonSchema2020);
