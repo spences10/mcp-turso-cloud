@@ -13,7 +13,7 @@ importers:
         version: 0.15.15
       '@tmcp/adapter-zod':
         specifier: ^0.1.6
-        version: 0.1.6(tmcp@1.16.0(typescript@5.9.2))(zod@4.1.11)
+        version: 0.1.6(tmcp@1.16.0(typescript@5.9.2))(zod@4.1.12)
       '@tmcp/transport-stdio':
         specifier: ^0.4.0
         version: 0.4.0(tmcp@1.16.0(typescript@5.9.2))
@@ -22,7 +22,7 @@ importers:
         version: 1.16.0(typescript@5.9.2)
       zod:
         specifier: ^4.1.11
-        version: 4.1.11
+        version: 4.1.12
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.7
@@ -574,8 +574,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  zod@4.1.11:
-    resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
 
 snapshots:
 
@@ -828,12 +828,12 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@tmcp/adapter-zod@0.1.6(tmcp@1.16.0(typescript@5.9.2))(zod@4.1.11)':
+  '@tmcp/adapter-zod@0.1.6(tmcp@1.16.0(typescript@5.9.2))(zod@4.1.12)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@types/json-schema': 7.0.15
       tmcp: 1.16.0(typescript@5.9.2)
-      zod: 4.1.11
+      zod: 4.1.12
 
   '@tmcp/transport-stdio@0.4.0(tmcp@1.16.0(typescript@5.9.2))':
     dependencies:
@@ -1154,4 +1154,4 @@ snapshots:
 
   ws@8.18.1: {}
 
-  zod@4.1.11: {}
+  zod@4.1.12: {}
