@@ -43,14 +43,14 @@
   "license": "MIT",
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
-    "@types/node": "^24.5.2",
-    "typescript": "^5.9.2"
+    "@types/node": "^24.9.2",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@libsql/client": "^0.15.15",
     "@tmcp/adapter-zod": "^0.1.6",
     "@tmcp/transport-stdio": "^0.4.0",
-    "tmcp": "^1.16.0",
-    "zod": "^4.1.11"
+    "tmcp": "^1.16.1",
+    "zod": "^4.1.12"
   }
 }
