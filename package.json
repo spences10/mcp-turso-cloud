@@ -1,6 +1,6 @@
 {
   "name": "mcp-turso-cloud",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "MCP server for integrating Turso with LLMs",
   "mcpName": "io.github.spences10/mcp-turso-cloud",
   "type": "module",

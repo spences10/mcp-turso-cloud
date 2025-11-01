@@ -1,5 +1,11 @@
 # mcp-turso-cloud
 
+## 0.0.11
+
+### Patch Changes
+
+- f6c103f: bump adapter-zod for JSON schema changes
+
 ## 0.0.10
 
 ### Patch Changes
