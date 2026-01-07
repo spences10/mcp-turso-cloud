@@ -47,7 +47,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@libsql/client": "^0.15.15",
+    "@libsql/client": "^0.17.0",
     "@tmcp/adapter-zod": "^0.1.7",
     "@tmcp/transport-stdio": "^0.4.1",
     "tmcp": "^1.19.0",
