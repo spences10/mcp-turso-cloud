@@ -13,7 +13,7 @@ importers:
         version: 0.15.15
       '@tmcp/adapter-zod':
         specifier: ^0.1.7
-        version: 0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.2.0)
+        version: 0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.3.6)
       '@tmcp/transport-stdio':
         specifier: ^0.4.1
         version: 0.4.1(tmcp@1.19.0(typescript@5.9.3))
@@ -22,7 +22,7 @@ importers:
         version: 1.19.0(typescript@5.9.3)
       zod:
         specifier: ^4.2.0
-        version: 4.2.0
+        version: 4.3.6
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.8
@@ -373,6 +373,7 @@ packages:
 
   libsql@0.5.22:
     resolution: {integrity: sha512-NscWthMQt7fpU8lqd7LXMvT9pi+KhhmTHAJWUB/Lj6MWa0MKFv0F2V4C6WKKpjCVZl0VwcDz4nOI3CyaT1DDiA==}
+    cpu: [x64, arm64, wasm32, arm]
     os: [darwin, linux, win32]
 
   locate-path@5.0.0:
@@ -580,8 +581,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  zod@4.2.0:
-    resolution: {integrity: sha512-Bd5fw9wlIhtqCCxotZgdTOMwGm1a0u75wARVEY9HMs1X17trvA/lMi4+MGK5EUfYkXVTbX8UDiDKW4OgzHVUZw==}
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
 snapshots:
 
@@ -834,12 +835,12 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.2.0)':
+  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.3.6)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@types/json-schema': 7.0.15
       tmcp: 1.19.0(typescript@5.9.3)
-      zod: 4.2.0
+      zod: 4.3.6
 
   '@tmcp/transport-stdio@0.4.1(tmcp@1.19.0(typescript@5.9.3))':
     dependencies:
@@ -1166,4 +1167,4 @@ snapshots:
 
   ws@8.18.1: {}
 
-  zod@4.2.0: {}
+  zod@4.3.6: {}
