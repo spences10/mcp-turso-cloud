@@ -13,13 +13,13 @@ importers:
         version: 0.17.0
       '@tmcp/adapter-zod':
         specifier: ^0.1.7
-        version: 0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.3.6)
+        version: 0.1.7(tmcp@1.19.2(typescript@5.9.3))(zod@4.3.6)
       '@tmcp/transport-stdio':
         specifier: ^0.4.1
-        version: 0.4.1(tmcp@1.19.0(typescript@5.9.3))
+        version: 0.4.1(tmcp@1.19.2(typescript@5.9.3))
       tmcp:
         specifier: ^1.19.0
-        version: 1.19.0(typescript@5.9.3)
+        version: 1.19.2(typescript@5.9.3)
       zod:
         specifier: ^4.2.0
         version: 4.3.6
@@ -184,6 +184,9 @@ packages:
 
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
+
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
   '@tmcp/adapter-zod@0.1.7':
     resolution: {integrity: sha512-XF7f9D9HFbKJDUwRHYSd1IaxGaTaWuFjTbwAfUUrh/ejucewvHClMXMxxe9mQYRFu3yOoPCQxmC9ZovVzuwMlQ==}
@@ -538,8 +541,8 @@ packages:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
     engines: {node: '>=8'}
 
-  tmcp@1.19.0:
-    resolution: {integrity: sha512-wOY449EdaWDo7wLZEOVjeH9fn/AqfFF4f+3pDerCI8xHpy2Z8msUjAF0Vkg01aEFIdFMmiNDiY4hu6E7jVX79w==}
+  tmcp@1.19.2:
+    resolution: {integrity: sha512-/AEG/jlzflGKqCKm7GNdhz50VtFlN+3vcnKd+iQJXcHdIPrpCRMolEj57SfgcXcfE2ouX7J6Q05gPKsS2NZhKg==}
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -560,11 +563,11 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
 
-  uri-template-matcher@1.1.1:
-    resolution: {integrity: sha512-ooMjzxaqlquLZZU0Y+Ol+RAp5xav3oJ3qc3gO585QFmB9iX88ip8pflaCKKtkwPd40ro2noB8yQG2OhFddmddg==}
+  uri-template-matcher@1.1.2:
+    resolution: {integrity: sha512-uZc1h12jdO3m/R77SfTEOuo6VbMhgWznaawKpBjRGSJb7i91x5PgI37NQJtG+Cerxkk0yr1pylBY2qG1kQ+aEQ==}
 
-  valibot@1.1.0:
-    resolution: {integrity: sha512-Nk8lX30Qhu+9txPYTwM0cFlWLdPFsFr6LblzqIySfbZph9+BFsAHsNvHOymEviUepeIW6KFHzpX8TKhbptBXXw==}
+  valibot@1.2.0:
+    resolution: {integrity: sha512-mm1rxUsmOxzrwnX5arGS+U4T25RdvpPjPN4yR0u9pUBov9+zGVtO84tif1eY4r6zWxVxu3KzIyknJy3rxfRZZg==}
     peerDependencies:
       typescript: '>=5'
     peerDependenciesMeta:
@@ -852,16 +855,18 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.0(typescript@5.9.3))(zod@4.3.6)':
+  '@standard-schema/spec@1.1.0': {}
+
+  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.2(typescript@5.9.3))(zod@4.3.6)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@types/json-schema': 7.0.15
-      tmcp: 1.19.0(typescript@5.9.3)
+      tmcp: 1.19.2(typescript@5.9.3)
       zod: 4.3.6
 
-  '@tmcp/transport-stdio@0.4.1(tmcp@1.19.0(typescript@5.9.3))':
+  '@tmcp/transport-stdio@0.4.1(tmcp@1.19.2(typescript@5.9.3))':
     dependencies:
-      tmcp: 1.19.0(typescript@5.9.3)
+      tmcp: 1.19.2(typescript@5.9.3)
 
   '@types/json-schema@7.0.15': {}
 
@@ -1160,13 +1165,13 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  tmcp@1.19.0(typescript@5.9.3):
+  tmcp@1.19.2(typescript@5.9.3):
     dependencies:
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       json-rpc-2.0: 1.7.1
       sqids: 0.3.0
-      uri-template-matcher: 1.1.1
-      valibot: 1.1.0(typescript@5.9.3)
+      uri-template-matcher: 1.1.2
+      valibot: 1.2.0(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
@@ -1182,9 +1187,9 @@ snapshots:
 
   universalify@0.1.2: {}
 
-  uri-template-matcher@1.1.1: {}
+  uri-template-matcher@1.1.2: {}
 
-  valibot@1.1.0(typescript@5.9.3):
+  valibot@1.2.0(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
 
