@@ -13,13 +13,13 @@ importers:
         version: 0.17.0
       '@tmcp/adapter-zod':
         specifier: ^0.1.7
-        version: 0.1.7(tmcp@1.19.2(typescript@5.9.3))(zod@4.3.6)
+        version: 0.1.7(tmcp@1.19.3(typescript@5.9.3))(zod@4.3.6)
       '@tmcp/transport-stdio':
         specifier: ^0.4.1
-        version: 0.4.1(tmcp@1.19.2(typescript@5.9.3))
+        version: 0.4.1(tmcp@1.19.3(typescript@5.9.3))
       tmcp:
         specifier: ^1.19.0
-        version: 1.19.2(typescript@5.9.3)
+        version: 1.19.3(typescript@5.9.3)
       zod:
         specifier: ^4.2.0
         version: 4.3.6
@@ -534,8 +534,8 @@ packages:
     resolution: {integrity: sha512-wK0Ri4fOGjv/XPy8SBHZChl8CM7uMc5VML7SqiQ0zG7+J5Vr+RMQDoHa2CNT6KHUnTGIXH34UDMkPzAUyapBZg==}
     engines: {node: '>=8'}
 
-  tmcp@1.19.2:
-    resolution: {integrity: sha512-/AEG/jlzflGKqCKm7GNdhz50VtFlN+3vcnKd+iQJXcHdIPrpCRMolEj57SfgcXcfE2ouX7J6Q05gPKsS2NZhKg==}
+  tmcp@1.19.3:
+    resolution: {integrity: sha512-plz/TLKNFrdfQN32LjCTN6ULy6pynfGPgHcU7KGCI5dBrxQ9Mub99SmcYuzxEkLjJooQuOD3gosSwZEl1htOtw==}
 
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
@@ -847,16 +847,16 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.2(typescript@5.9.3))(zod@4.3.6)':
+  '@tmcp/adapter-zod@0.1.7(tmcp@1.19.3(typescript@5.9.3))(zod@4.3.6)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@types/json-schema': 7.0.15
-      tmcp: 1.19.2(typescript@5.9.3)
+      tmcp: 1.19.3(typescript@5.9.3)
       zod: 4.3.6
 
-  '@tmcp/transport-stdio@0.4.1(tmcp@1.19.2(typescript@5.9.3))':
+  '@tmcp/transport-stdio@0.4.1(tmcp@1.19.3(typescript@5.9.3))':
     dependencies:
-      tmcp: 1.19.2(typescript@5.9.3)
+      tmcp: 1.19.3(typescript@5.9.3)
 
   '@types/json-schema@7.0.15': {}
 
@@ -1151,7 +1151,7 @@ snapshots:
 
   term-size@2.2.1: {}
 
-  tmcp@1.19.2(typescript@5.9.3):
+  tmcp@1.19.3(typescript@5.9.3):
     dependencies:
       '@standard-schema/spec': 1.1.0
       json-rpc-2.0: 1.7.1
