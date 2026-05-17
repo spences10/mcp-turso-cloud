@@ -111,6 +111,48 @@ For WSL environments, add this to your Claude Desktop configuration:
 }
 ```
 
+### Usage with VS Code
+
+[![Install with NPX in VS Code](https://img.shields.io/badge/VS_Code-NPM-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=turso&inputs=%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tursoApiToken%22%2C%22description%22%3A%22Turso%20API%20Token%22%2C%22password%22%3Atrue%7D%2C%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tursoOrg%22%2C%22description%22%3A%22Turso%20Organization%20Name%22%7D%5D&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22mcp-turso-cloud%22%5D%2C%22env%22%3A%7B%22TURSO_API_TOKEN%22%3A%22%24%7Binput%3AtursoApiToken%7D%22%2C%22TURSO_ORGANIZATION%22%3A%22%24%7Binput%3AtursoOrg%7D%22%7D%7D) [![Install with NPX in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-NPM-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=turso&inputs=%5B%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tursoApiToken%22%2C%22description%22%3A%22Turso%20API%20Token%22%2C%22password%22%3Atrue%7D%2C%7B%22type%22%3A%22promptString%22%2C%22id%22%3A%22tursoOrg%22%2C%22description%22%3A%22Turso%20Organization%20Name%22%7D%5D&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22mcp-turso-cloud%22%5D%2C%22env%22%3A%7B%22TURSO_API_TOKEN%22%3A%22%24%7Binput%3AtursoApiToken%7D%22%2C%22TURSO_ORGANIZATION%22%3A%22%24%7Binput%3AtursoOrg%7D%22%7D%7D&quality=insiders)
+
+For quick installation, click one of the install buttons above.
+
+For manual installation, add the following JSON block to your User Settings (JSON) file in VS Code. You can do this by pressing `Ctrl + Shift + P` and typing `Preferences: Open User Settings (JSON)`.
+
+Optionally, you can add it to a file called `.vscode/mcp.json` in your workspace. This will allow you to share the configuration with others.
+
+> Note that the `mcp` key is not needed in the `.vscode/mcp.json` file.
+
+```json
+{
+  "mcp": {
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "tursoApiToken",
+        "description": "Turso API Token",
+        "password": true
+      },
+      {
+        "type": "promptString",
+        "id": "tursoOrg",
+        "description": "Turso Organization Name"
+      }
+    ],
+    "servers": {
+      "turso": {
+        "command": "npx",
+        "args": ["-y", "mcp-turso-cloud"],
+        "env": {
+          "TURSO_API_TOKEN": "${input:tursoApiToken}",
+          "TURSO_ORGANIZATION": "${input:tursoOrg}"
+        }
+      }
+    }
+  }
+}
+```
+
 ### Environment Variables
 
 The server requires the following environment variables:
