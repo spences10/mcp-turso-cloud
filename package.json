@@ -44,7 +44,7 @@
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
     "@types/node": "^25.0.2",
-    "typescript": "^6.0.0"
+    "typescript": "^7.0.0"
   },
   "dependencies": {
     "@libsql/client": "^0.17.0",
