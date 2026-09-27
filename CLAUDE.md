@@ -20,13 +20,22 @@ database-level operations.
 
 **Build & Development:**
 
-- `pnpm build` - Compile TypeScript and make executable
+- `pnpm build` - Bundle the executable and declarations with Vite+
 - `pnpm start` - Run the compiled server
-- `pnpm dev` - Development mode with MCP inspector
+- `pnpm dev` - Rebuild on source changes with Vite+
+- `pnpm inspect` - Open the MCP inspector for the built server
+- `pnpm check` - Check formatting, lint, and types with Vite+
+- `pnpm check:fix` - Apply formatting and safe lint fixes
+- `pnpm format` - Format with Oxfmt
+- `pnpm test` - Build and run offline CLI smoke tests
 - `pnpm changeset` - Version management
 - `pnpm release` - Build and publish to npm
 
-**Package Manager:** Uses pnpm exclusively
+**Runtime:** Node.js >=24.15.0; development version in `.node-version`
+
+**Package Manager:** Uses pnpm 12.5.1 exclusively. Dependency versions
+live in the `pnpm-workspace.yaml` catalog with a two-day release-age
+policy. Tooling configuration lives in `vite.config.ts`.
 
 ## Architecture & Key Concepts
 
@@ -50,7 +59,9 @@ database-level operations.
 
 **Key Dependencies:**
 
-- `@modelcontextprotocol/sdk` - MCP framework
+- `tmcp` - MCP framework
+- `@tmcp/adapter-zod` - Zod schema adapter
+- `@tmcp/transport-stdio` - Stdio transport
 - `@libsql/client` - Turso/libSQL client
 - `zod` - Runtime validation
 
@@ -69,11 +80,14 @@ database-level operations.
 
 ## Testing & Quality
 
-**Current State:** No test framework configured. Uses TypeScript
-strict mode and comprehensive error handling.
+**Current State:** Vite+ runs Vitest CLI smoke tests in `tests/`.
+`pnpm test` builds first, then checks MCP initialization, tool
+discovery, and missing-configuration failure without real credentials
+or database access. TypeScript strict mode and type-aware lint run via
+`pnpm check`.
 
-**Adding Tests:** Would need to establish testing framework
-(Jest/Vitest recommended for Node.js/TypeScript projects).
+**Adding Tests:** Add `tests/**/*.test.ts` files using
+`vite-plus/test`.
 
 ## Code Patterns
 
@@ -166,38 +180,43 @@ Do you want to proceed? (yes/no)
 2. **Communication patterns for specific operations:**
 
    **Database Deletion (`delete_database`):**
+
    ```
    ⚠️ CRITICAL WARNING: You are about to permanently delete the database "{name}".
    This will destroy ALL data, tables, and cannot be undone.
-   
+
    Before proceeding:
    - Ensure you have backups if needed
    - Verify this is the correct database to delete
-   
+
    Type "DELETE {database_name}" to confirm this destructive action.
    ```
 
    **Destructive SQL Queries (`execute_query`):**
+
    ```
    ⚠️ DESTRUCTIVE SQL OPERATION DETECTED
    Query: {query}
-   
+
    Impact Analysis:
    - Operation type: {DROP/DELETE/UPDATE/TRUNCATE}
    - Estimated affected rows: {count if available}
    - Irreversible: Yes
-   
+
    Safety recommendations:
    - Create backup: CREATE TABLE backup_table AS SELECT * FROM target_table;
    - Use transaction: BEGIN; {query}; -- Review results, then COMMIT or ROLLBACK;
-   
+
    Proceed with this destructive operation? (yes/no)
    ```
 
 3. **Enhanced error handling:**
-   - If user tries to use `execute_query` for SELECT operations, redirect to `execute_read_only_query`
-   - If user attempts mass deletion without WHERE clause, provide extra warnings
-   - For DROP operations, explain what dependent objects might be affected
+   - If user tries to use `execute_query` for SELECT operations,
+     redirect to `execute_read_only_query`
+   - If user attempts mass deletion without WHERE clause, provide
+     extra warnings
+   - For DROP operations, explain what dependent objects might be
+     affected
 
 4. **Context awareness:**
    - Track which database is currently selected
@@ -205,9 +224,10 @@ Do you want to proceed? (yes/no)
    - Warn if switching database contexts during operations
 
 **Example Safe Interaction Flow:**
+
 ```
 User: "Delete all inactive users from the database"
-Assistant: 
+Assistant:
 ⚠️ DESTRUCTIVE OPERATION WARNING ⚠️
 You want to execute: DELETE FROM users WHERE active = false
 

@@ -3,7 +3,6 @@
 import { McpServer } from 'tmcp';
 import { ZodJsonSchemaAdapter } from '@tmcp/adapter-zod';
 import { StdioTransport } from '@tmcp/transport-stdio';
-import { z } from 'zod';
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

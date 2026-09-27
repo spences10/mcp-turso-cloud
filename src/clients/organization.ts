@@ -4,6 +4,7 @@
 import { TursoApiError } from '../common/errors.js';
 import { Database } from '../common/types.js';
 import { get_config } from '../config.js';
+import { generate_database_token as generate_token } from './token-manager.js';
 
 /**
  * Base URL for the Turso Platform API
@@ -199,9 +200,5 @@ export async function generate_database_token(
 	database_name: string,
 	permission: 'full-access' | 'read-only' = 'full-access',
 ): Promise<string> {
-	// Import here to avoid circular dependencies
-	const { generate_database_token: generate_token } = await import(
-		'./token-manager.js'
-	);
 	return generate_token(database_name, permission);
 }

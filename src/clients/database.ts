@@ -21,7 +21,8 @@ function convert_parameters(params: Record<string, any>): any {
 	if (is_positional) {
 		// Convert to array for positional parameters
 		const max_index = Math.max(...keys.map((k) => parseInt(k)));
-		const param_array: any[] = new Array(max_index);
+		const param_array: any[] = [];
+		param_array.length = max_index;
 
 		for (const [key, value] of Object.entries(params)) {
 			const index = parseInt(key) - 1; // Convert 1-based to 0-based indexing

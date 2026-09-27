@@ -15,47 +15,114 @@ import {
 const EmptySchema = z.object({});
 
 const CreateDatabaseSchema = z.object({
-	name: z.string().describe('Name of the database to create - Must be unique within organization'),
-	group: z.string().optional().describe('Optional group name for the database (defaults to "default")'),
-	regions: z.array(z.string()).optional().describe('Optional list of regions to deploy the database to (affects latency and compliance)'),
+	name: z
+		.string()
+		.describe(
+			'Name of the database to create - Must be unique within organization',
+		),
+	group: z
+		.string()
+		.optional()
+		.describe(
+			'Optional group name for the database (defaults to "default")',
+		),
+	regions: z
+		.array(z.string())
+		.optional()
+		.describe(
+			'Optional list of regions to deploy the database to (affects latency and compliance)',
+		),
 });
 
 const DeleteDatabaseSchema = z.object({
-	name: z.string().describe('Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER'),
+	name: z
+		.string()
+		.describe(
+			'Name of the database to permanently delete - WARNING: ALL DATA WILL BE LOST FOREVER',
+		),
 });
 
 const GenerateDatabaseTokenSchema = z.object({
-	database: z.string().describe('Name of the database to generate a token for'),
-	permission: z.enum(['full-access', 'read-only']).optional().describe('Permission level for the token'),
+	database: z
+		.string()
+		.describe('Name of the database to generate a token for'),
+	permission: z
+		.enum(['full-access', 'read-only'])
+		.optional()
+		.describe('Permission level for the token'),
 });
 
 const DatabaseOnlySchema = z.object({
-	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+	database: z
+		.string()
+		.optional()
+		.describe(
+			'Database name (optional, uses context if not provided)',
+		),
 });
 
 const QuerySchema = z.object({
 	query: z.string().describe('SQL query to execute'),
-	params: z.record(z.string(), z.any()).optional().describe('Query parameters (optional) - Use parameterized queries for security'),
-	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+	params: z
+		.record(z.string(), z.any())
+		.optional()
+		.describe(
+			'Query parameters (optional) - Use parameterized queries for security',
+		),
+	database: z
+		.string()
+		.optional()
+		.describe(
+			'Database name (optional, uses context if not provided)',
+		),
 });
 
 const ReadOnlyQuerySchema = z.object({
-	query: z.string().describe('Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)'),
-	params: z.record(z.string(), z.any()).optional().describe('Query parameters (optional) - Use parameterized queries for security'),
-	database: z.string().optional().describe('Database name (optional, uses context if not provided) - Specify target database'),
+	query: z
+		.string()
+		.describe(
+			'Read-only SQL query to execute (SELECT, PRAGMA, EXPLAIN only)',
+		),
+	params: z
+		.record(z.string(), z.any())
+		.optional()
+		.describe(
+			'Query parameters (optional) - Use parameterized queries for security',
+		),
+	database: z
+		.string()
+		.optional()
+		.describe(
+			'Database name (optional, uses context if not provided) - Specify target database',
+		),
 });
 
 const DescribeTableSchema = z.object({
 	table: z.string().describe('Table name'),
-	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+	database: z
+		.string()
+		.optional()
+		.describe(
+			'Database name (optional, uses context if not provided)',
+		),
 });
 
 const VectorSearchSchema = z.object({
 	table: z.string().describe('Table name'),
 	vector_column: z.string().describe('Column containing vectors'),
-	query_vector: z.array(z.number()).describe('Query vector for similarity search'),
-	limit: z.number().optional().describe('Maximum number of results (optional, default 10)'),
-	database: z.string().optional().describe('Database name (optional, uses context if not provided)'),
+	query_vector: z
+		.array(z.number())
+		.describe('Query vector for similarity search'),
+	limit: z
+		.number()
+		.optional()
+		.describe('Maximum number of results (optional, default 10)'),
+	database: z
+		.string()
+		.optional()
+		.describe(
+			'Database name (optional, uses context if not provided)',
+		),
 });
 
 /**
@@ -192,8 +259,12 @@ export function register_tools(server: McpServer<any>): void {
 				const database_name = resolve_database_name(database);
 				if (database) set_current_database(database);
 
-				const tables = await database_client.list_tables(database_name);
-				return create_tool_response({ database: database_name, tables });
+				const tables =
+					await database_client.list_tables(database_name);
+				return create_tool_response({
+					database: database_name,
+					tables,
+				});
 			} catch (error) {
 				return create_tool_error_response(error);
 			}
@@ -319,7 +390,13 @@ export function register_tools(server: McpServer<any>): void {
 			description: 'Performs vector similarity search',
 			schema: VectorSearchSchema,
 		},
-		async ({ table, vector_column, query_vector, limit = 10, database }) => {
+		async ({
+			table,
+			vector_column,
+			query_vector,
+			limit = 10,
+			database,
+		}) => {
 			try {
 				const database_name = resolve_database_name(database);
 				if (database) set_current_database(database);

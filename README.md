@@ -327,39 +327,50 @@ Example:
 
 ### Setup
 
-1. Clone the repository
-2. Install dependencies:
+Use Node.js 24.15.0 or newer and pnpm 12.5.1 (pinned in
+`package.json`). `.node-version` selects the development runtime.
 
 ```bash
-npm install
+pnpm install
+pnpm check
+pnpm test
 ```
 
-3. Build the project:
+Vite+ provides the build, formatting, linting, type checking, and test
+runner through `vite.config.ts`:
 
-```bash
-npm run build
-```
+- `pnpm build` — bundle the executable and declarations into `dist/`
+- `pnpm start` — run the built server with your Turso configuration
+- `pnpm dev` — rebuild on source changes
+- `pnpm inspect` — open the MCP inspector against the built server
+- `pnpm check` — check formatting, lint, and types
+- `pnpm check:fix` — apply formatting and safe lint fixes
+- `pnpm format` / `pnpm format:check` — format or check formatting
+- `pnpm test` — build and run offline CLI smoke tests; no Turso
+  credentials or database access needed
 
-4. Run in development mode:
+Dependency versions live in the `pnpm-workspace.yaml` catalog. New
+releases must be at least two days old before installation.
 
-```bash
-npm run dev
-```
+### Editors
+
+Install the **Oxc** extension in Zed or the **Vite Plus Extension
+Pack** in VS Code. Checked-in `.zed/settings.json` and
+`.vscode/settings.json` use Oxfmt with the shared `vite.config.ts`
+formatting settings. Prettier configuration is no longer used.
 
 ### Publishing
 
-1. Update version in package.json
-2. Build the project:
-
 ```bash
-npm run build
+pnpm changeset
+pnpm version
+pnpm check
+pnpm test
+pnpm release
 ```
 
-3. Publish to npm:
-
-```bash
-npm publish
-```
+`pnpm release` builds and publishes through Changesets. `pnpm pack`
+can verify the package locally without publishing.
 
 ## Troubleshooting
 

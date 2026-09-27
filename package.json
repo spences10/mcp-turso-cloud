@@ -1,56 +1,67 @@
 {
-  "name": "mcp-turso-cloud",
-  "version": "0.0.11",
-  "description": "MCP server for integrating Turso with LLMs",
-  "mcpName": "io.github.spences10/mcp-turso-cloud",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "mcp-turso-cloud": "./dist/index.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
-    "start": "node dist/index.js",
-    "dev": "npx @modelcontextprotocol/inspector dist/index.js",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm run build && changeset publish",
-    "sync-server-json": "node -e \"const pkg = require('./package.json'); const server = require('./server.json'); server.version = pkg.version; server.packages[0].version = pkg.version; require('fs').writeFileSync('./server.json', JSON.stringify(server, null, 2));\"",
-    "publish-mcp": "pnpm run sync-server-json && mcp-publisher publish"
-  },
-  "keywords": [
-    "mcp",
-    "model-context-protocol",
-    "turso",
-    "database",
-    "vector-search",
-    "libsql",
-    "sqlite",
-    "sql",
-    "llm",
-    "ai",
-    "vector-database",
-    "embeddings",
-    "similarity-search"
-  ],
-  "author": "Scott Spence",
-  "license": "MIT",
-  "devDependencies": {
-    "@changesets/cli": "^3.0.3",
-    "@types/node": "^26.6.3",
-    "typescript": "^7.0.2"
-  },
-  "dependencies": {
-    "@libsql/client": "^0.18.0",
-    "@tmcp/adapter-zod": "^0.1.8",
-    "@tmcp/transport-stdio": "^0.5.0",
-    "tmcp": "^1.20.0",
-    "zod": "^4.6.5"
-  }
+	"name": "mcp-turso-cloud",
+	"version": "0.0.11",
+	"description": "MCP server for integrating Turso with LLMs",
+	"keywords": [
+		"ai",
+		"database",
+		"embeddings",
+		"libsql",
+		"llm",
+		"mcp",
+		"model-context-protocol",
+		"similarity-search",
+		"sql",
+		"sqlite",
+		"turso",
+		"vector-database",
+		"vector-search"
+	],
+	"license": "MIT",
+	"author": "Scott Spence",
+	"bin": {
+		"mcp-turso-cloud": "./dist/index.js"
+	},
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "vp pack && chmod +x dist/index.js",
+		"start": "node dist/index.js",
+		"dev": "vp pack --watch",
+		"inspect": "pnpx @modelcontextprotocol/inspector dist/index.js",
+		"check": "vp check",
+		"check:fix": "vp check --fix",
+		"format": "vp fmt",
+		"format:check": "vp fmt --check",
+		"test": "pnpm run build && vp test",
+		"changeset": "changeset",
+		"version": "changeset version",
+		"release": "pnpm run build && changeset publish",
+		"sync-server-json": "node -e \"const pkg = require('./package.json'); const server = require('./server.json'); server.version = pkg.version; server.packages[0].version = pkg.version; require('fs').writeFileSync('./server.json', JSON.stringify(server, null, 2));\"",
+		"publish-mcp": "pnpm run sync-server-json && mcp-publisher publish"
+	},
+	"dependencies": {
+		"@libsql/client": "catalog:",
+		"@tmcp/adapter-zod": "catalog:",
+		"@tmcp/transport-stdio": "catalog:",
+		"tmcp": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@changesets/cli": "catalog:",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite-plus": "catalog:"
+	},
+	"engines": {
+		"node": ">=24.15.0"
+	},
+	"packageManager": "pnpm@12.5.1",
+	"mcpName": "io.github.spences10/mcp-turso-cloud"
 }
