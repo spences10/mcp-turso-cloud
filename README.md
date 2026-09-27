@@ -36,10 +36,25 @@ databases directly from LLMs.
 This server implements a security-focused separation between read-only
 and destructive database operations:
 
-- Use `execute_read_only_query` for SELECT and PRAGMA queries (safe,
-  read-only operations)
-- Use `execute_query` for INSERT, UPDATE, DELETE, CREATE, DROP, and
-  other operations that modify data
+- Use `execute_read_only_query` for SELECT, read-only WITH/VALUES,
+  EXPLAIN of reads, and allowlisted metadata PRAGMAs.
+- Use `execute_query` for INSERT, UPDATE, DELETE, CREATE, DROP,
+  mutating PRAGMAs, and other operations that modify data.
+
+Read tools always request read-only Turso credentials, including when
+full-access clients are already cached. The token endpoint receives
+[`authorization=read-only`](https://docs.turso.tech/api-reference/databases/create-token)
+as a query parameter. Read failures never fall back to full access.
+Tokens and clients are cached separately by permission and refreshed
+when tokens expire.
+
+Local SQL validation rejects multiple statements, mutating PRAGMAs on
+the read path, and file/extension functions. It is a conservative
+routing check, not a complete SQL parser or a substitute for Turso's
+server-side authorization. Unknown or quoted PRAGMA names require the
+write tool. Compound statements containing internal semicolons (such
+as trigger definitions) are not supported. Identifiers in generated
+SQL are quoted; data values use bindings.
 
 This separation allows for different permission levels and approval
 requirements:
@@ -134,7 +149,15 @@ The server implements MCP Tools organized by category:
 
 Lists all databases in your Turso organization.
 
-Parameters: None
+Parameters:
+
+- `limit` (integer, optional): Maximum results, default 1000, maximum
+  10000
+- `offset` (integer, optional): Results to skip, default 0, maximum
+  1000000
+
+Responses include `pagination` with `returned_count`, `has_more`, and
+`next_offset`.
 
 Example response:
 
@@ -195,12 +218,12 @@ Example:
 
 #### generate_database_token
 
-Generates a new token for a specific database.
+Generates a new token for a specific database. Expiration is
+configured through `TOKEN_EXPIRATION`; the returned JWT is a secret.
 
 Parameters:
 
 - `database` (string, required): Database name
-- `expiration` (string, optional): Token expiration time
 - `permission` (string, optional): Permission level ('full-access' or
   'read-only')
 
@@ -209,21 +232,30 @@ Example:
 ```json
 {
 	"database": "customer_db",
-	"expiration": "30d",
 	"permission": "read-only"
 }
 ```
 
 ### Database Tools
 
+Database names are limited to 1–64 letters, digits, underscores, or
+hyphens. Table/column identifiers accept 1–64 characters, excluding
+null bytes; punctuation and quotes are safely escaped. A supplied
+database becomes the current context only after its operation
+succeeds.
+
 #### list_tables
 
-Lists all tables in a database.
+Lists all tables in a database, with pagination metadata.
 
 Parameters:
 
 - `database` (string, optional): Database name (uses context if not
   provided)
+- `limit` (integer, optional): Maximum results, default 1000, maximum
+  10000
+- `offset` (integer, optional): Results to skip, default 0, maximum
+  1000000
 
 Example:
 
@@ -235,15 +267,34 @@ Example:
 
 #### execute_read_only_query
 
-Executes a read-only SQL query (SELECT, PRAGMA) against a database.
+Executes one SELECT, read-only WITH/VALUES query, EXPLAIN of a read,
+or allowlisted metadata PRAGMA against a database.
 
 Parameters:
 
-- `query` (string, required): SQL query to execute (must be SELECT or
-  PRAGMA)
-- `params` (object, optional): Query parameters
+- `query` (string, required): One SQL statement, maximum 10000
+  characters
+- `params` (object, optional): Named parameters or contiguous
+  positional keys starting at `"1"`; values must be strings, finite
+  numbers, booleans, or null
 - `database` (string, optional): Database name (uses context if not
   provided)
+- `limit` (integer, optional): Maximum rows, default 1000, maximum
+  10000
+- `offset` (integer, optional): Rows to skip, default 0, maximum
+  1000000
+
+SELECT-style queries are wrapped with an outer limit/offset,
+preserving any limit already present in your SQL. Metadata PRAGMA and
+EXPLAIN results are sliced after fetching. Use a stable `ORDER BY`
+when paging. Responses retain `result.rows` and add `pagination`
+metadata.
+
+Query result rows and column names have a 512 KiB JSON budget. If a
+row cannot fit, select fewer/smaller columns (for example, `substr`).
+`result.truncated` and `truncation_reason` explain omitted results;
+`next_offset` is null when no row fits. BigInts are decimal strings
+and blobs are `{ "type": "blob", "base64": "..." }`.
 
 Example:
 
@@ -262,9 +313,9 @@ CREATE, etc.) against a database.
 
 Parameters:
 
-- `query` (string, required): SQL query to execute (cannot be SELECT
-  or PRAGMA)
-- `params` (object, optional): Query parameters
+- `query` (string, required): One write statement, maximum 10000
+  characters; includes mutating PRAGMAs and WITH-prefixed writes
+- `params` (object, optional): Same parameter types as the read tool
 - `database` (string, optional): Database name (uses context if not
   provided)
 
@@ -277,6 +328,10 @@ Example:
 	"database": "customer_db"
 }
 ```
+
+Write result rows (such as `RETURNING`) are capped at 1000 rows and
+the same byte budget. `rowsAffected` remains intact. Truncation does
+not undo the write: do not rerun a write to fetch omitted rows.
 
 #### describe_table
 
@@ -305,9 +360,9 @@ Parameters:
 
 - `table` (string, required): Table name
 - `vector_column` (string, required): Column containing vectors
-- `query_vector` (number[], required): Query vector for similarity
-  search
-- `limit` (number, optional): Maximum number of results (default: 10)
+- `query_vector` (number[], required): 1–4096 finite numbers
+- `limit` (integer, optional): Maximum results, default 10, maximum
+  1000
 - `database` (string, optional): Database name (uses context if not
   provided)
 
@@ -346,8 +401,10 @@ runner through `vite.config.ts`:
 - `pnpm check` — check formatting, lint, and types
 - `pnpm check:fix` — apply formatting and safe lint fixes
 - `pnpm format` / `pnpm format:check` — format or check formatting
-- `pnpm test` — build and run offline CLI smoke tests; no Turso
-  credentials or database access needed
+- `pnpm test` — build and run offline SQL, permission, token, MCP
+  handler, and CLI tests; no Turso credentials or live database access
+  needed. SQL execution tests use an isolated in-memory libSQL
+  database.
 
 Dependency versions live in the `pnpm-workspace.yaml` catalog. New
 releases must be at least two days old before installation.

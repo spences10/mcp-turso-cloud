@@ -5,6 +5,8 @@
 - Never read `.env` files, even when explicitly asked.
 - Use snake_case for function and variable names.
 - Use pnpm exclusively.
+- Colocate tests with the code they test: `handler.ts` and
+  `handler.test.ts`, not a separate test directory.
 - Do not ask the user to run `pnpm dev`.
 
 ## Safety

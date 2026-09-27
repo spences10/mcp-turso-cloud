@@ -1,101 +1,30 @@
 #!/usr/bin/env node
 
-import { McpServer } from 'tmcp';
-import { ZodJsonSchemaAdapter } from '@tmcp/adapter-zod';
 import { StdioTransport } from '@tmcp/transport-stdio';
-
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
+import { readFileSync as read_file_sync } from 'node:fs';
+import { close_database_clients } from './clients/database.js';
 import { get_config } from './config.js';
-import { register_tools } from './tools/handler.js';
+import { create_mcp_server } from './mcp-server.js';
 
-// Get package info for server metadata
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const pkg = JSON.parse(
-	readFileSync(join(__dirname, '..', 'package.json'), 'utf8'),
-);
-const { name, version } = pkg;
-
-/**
- * Main class for the Turso MCP server
- */
-class TursoServer {
-	private server: McpServer;
-
-	constructor() {
-		// Initialize the server with metadata
-		const adapter = new ZodJsonSchemaAdapter();
-		this.server = new McpServer(
-			{
-				name,
-				version,
-				description: 'MCP server for integrating Turso with LLMs',
-			},
-			{
-				adapter,
-				capabilities: {
-					tools: { listChanged: true },
-				},
-			},
-		);
-
-		// Handle process termination
-		process.on('SIGINT', async () => {
-			process.exit(0);
-		});
-
-		process.on('SIGTERM', async () => {
-			process.exit(0);
-		});
-	}
-
-	/**
-	 * Initialize the server
-	 */
-	private async initialize(): Promise<void> {
-		try {
-			// Load configuration
-			const config = get_config();
-			console.error(
-				`Turso MCP server initialized for organization: ${config.TURSO_ORGANIZATION}`,
-			);
-
-			// Register all tools using the unified handler
-			register_tools(this.server);
-
-			console.error('All tools registered');
-		} catch (error) {
-			console.error('Failed to initialize server:', error);
-			process.exit(1);
-		}
-	}
-
-	/**
-	 * Run the server
-	 */
-	public async run(): Promise<void> {
-		try {
-			// Initialize the server
-			await this.initialize();
-
-			// Connect to the transport
-			const transport = new StdioTransport(this.server);
-			transport.listen();
-
-			console.error('Turso MCP server running on stdio');
-		} catch (error) {
-			console.error('Failed to start server:', error);
-			process.exit(1);
-		}
-	}
-}
-
-// Create and run the server
-const server = new TursoServer();
-server.run().catch((error) => {
-	console.error('Unhandled error:', error);
+try {
+	const config = get_config();
+	const { name, version } = JSON.parse(
+		read_file_sync(
+			new URL('../package.json', import.meta.url),
+			'utf8',
+		),
+	);
+	const server = create_mcp_server({
+		name,
+		version,
+		description: 'MCP server for integrating Turso with LLMs',
+	});
+	process.once('exit', close_database_clients);
+	new StdioTransport(server).listen();
+	console.error(
+		`Turso MCP server running on stdio for organization: ${config.TURSO_ORGANIZATION}`,
+	);
+} catch (error) {
+	console.error('Failed to initialize server:', error);
 	process.exit(1);
-});
+}

@@ -15,9 +15,16 @@ export class TursoApiError extends Error {
 	}
 }
 
-/**
- * Get error message from various error types
- */
+export class ToolUsageError extends Error {
+	constructor(
+		message: string,
+		public readonly suggestions: string[] = [],
+	) {
+		super(message);
+		this.name = 'ToolUsageError';
+	}
+}
+
 export function get_error_message(error: unknown): string {
 	if (error instanceof Error) {
 		return error.message;

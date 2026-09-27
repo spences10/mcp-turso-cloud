@@ -11,7 +11,8 @@ export default define_config({
 		outExtensions: () => ({ js: '.js' }),
 	},
 	test: {
-		include: ['tests/**/*.test.ts'],
+		include: ['src/**/*.test.ts'],
+		setupFiles: ['tests/setup.ts'],
 	},
 	fmt: {
 		useTabs: true,

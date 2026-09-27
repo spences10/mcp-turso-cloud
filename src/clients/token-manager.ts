@@ -48,7 +48,12 @@ export async function generate_database_token(
 	permission: 'full-access' | 'read-only' = 'full-access',
 ): Promise<string> {
 	const config = get_config();
-	const url = `https://api.turso.tech/v1/organizations/${config.TURSO_ORGANIZATION}/databases/${database_name}/auth/tokens`;
+	const url = new URL(
+		`https://api.turso.tech/v1/organizations/${encodeURIComponent(config.TURSO_ORGANIZATION)}/databases/${encodeURIComponent(database_name)}/auth/tokens`,
+	);
+	// Turso expects authorization and expiration in the query, not the body.
+	url.searchParams.set('authorization', permission);
+	url.searchParams.set('expiration', config.TOKEN_EXPIRATION);
 
 	try {
 		const response = await fetch(url, {
@@ -57,10 +62,6 @@ export async function generate_database_token(
 				Authorization: `Bearer ${config.TURSO_API_TOKEN}`,
 				'Content-Type': 'application/json',
 			},
-			body: JSON.stringify({
-				expiration: config.TOKEN_EXPIRATION,
-				permission,
-			}),
 		});
 
 		if (!response.ok) {
@@ -73,6 +74,12 @@ export async function generate_database_token(
 		}
 
 		const data = await response.json();
+		if (typeof data?.jwt !== 'string' || !data.jwt) {
+			throw new TursoApiError(
+				'Token endpoint did not return a database token.',
+				502,
+			);
+		}
 		return data.jwt;
 	} catch (error) {
 		if (error instanceof TursoApiError) {
@@ -95,7 +102,8 @@ export async function get_database_token(
 	permission: 'full-access' | 'read-only' = 'full-access',
 ): Promise<string> {
 	// Check if we have a valid token in the cache
-	const cached_token = token_cache[database_name];
+	const cache_key = `${database_name}:${permission}`;
+	const cached_token = token_cache[cache_key];
 	if (cached_token && cached_token.permission === permission) {
 		// Check if the token is still valid (not expired)
 		if (cached_token.expiresAt > new Date()) {
@@ -110,7 +118,7 @@ export async function get_database_token(
 	);
 
 	// Cache the token
-	token_cache[database_name] = {
+	token_cache[cache_key] = {
 		jwt,
 		expiresAt: get_token_expiration(jwt),
 		permission,
@@ -132,4 +140,4 @@ export function cleanup_expired_tokens(): void {
 }
 
 // Set up a periodic cleanup of expired tokens (every hour)
-setInterval(cleanup_expired_tokens, 60 * 60 * 1000);
+setInterval(cleanup_expired_tokens, 60 * 60 * 1000).unref();

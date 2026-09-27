@@ -1,6 +1,7 @@
 /**
  * Context management for the Turso MCP server
  */
+import { ToolUsageError } from '../common/errors.js';
 import { DatabaseContext } from '../common/types.js';
 import { get_config } from '../config.js';
 
@@ -40,9 +41,9 @@ export function resolve_database_name(
 	const database_name = provided_name || get_current_database();
 
 	if (!database_name) {
-		throw new Error(
-			'No database specified. Please provide a database name or set a default database.',
-		);
+		throw new ToolUsageError('No database specified.', [
+			'Provide the database argument or configure TURSO_DEFAULT_DATABASE.',
+		]);
 	}
 
 	return database_name;
