@@ -62,6 +62,6 @@
 	"engines": {
 		"node": ">=24.15.0"
 	},
-	"packageManager": "pnpm@12.6.0",
+	"packageManager": "pnpm@12.8.1",
 	"mcpName": "io.github.spences10/mcp-turso-cloud"
 }
